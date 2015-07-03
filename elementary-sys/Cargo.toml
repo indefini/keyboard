@@ -1,0 +1,15 @@
+[package]
+name = "elementary-sys"
+version = "0.1.0"
+#authors = ["noone"]
+
+links = "elementary"
+build = "build.rs"
+
+[dependencies]
+libc = "0.1"
+
+[build-dependencies]
+pkg-config = "0.3"
+gcc = "0.3"
+
