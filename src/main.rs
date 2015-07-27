@@ -1,23 +1,38 @@
+#![feature(libc)]
+extern crate libc;
+
 extern crate elementary_sys as elm;
+
+use std::ffi::CString;
+//use libc::{c_void, c_int, c_char, c_ulong, c_long, c_uint, c_uchar, size_t};
+use libc::{c_char};
+
 fn main() {
-    println!("my keyboard");
+    let rows = [ "qwertyuiop", "asdfghjkl", "zxcvbnm" ];
+
     unsafe {
         elm::init();
-        elm::create_simple_window();
+        //elm::create_simple_window();
+        let k = elm::keyboard_new();
+        let mut row = 0;
+        for r in rows.iter() {
+            let mut col = 0;
+            for c in (*r).chars() {
+                elm::keyboard_add(k, cstring_new(&c.to_string()), col, row);
+                col = col +1;
+            }
+            row = row + 1;
+        }
     }
-
-    create_key("a");
-    create_key("b");
 
     unsafe {
         elm::run();
     }
 }
 
-fn create_key(name : &str)
+fn cstring_new(s : &str) -> *const c_char
 {
-    //TODO
-    // add rect with the name
-    println!("create key {}", name);
+    //let to_print = &b"Hello, world!"[..];
+    CString::new(s).unwrap().as_ptr()
 }
 
