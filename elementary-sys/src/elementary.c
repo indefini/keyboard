@@ -22,10 +22,6 @@ Evas_Object* table_new(Evas_Object* win)
   return tb;
 }
 
-//void create_key(
-//
-
-
 static void
 _window_del(void *data, Evas_Object *obj, void *event_info)
 {
@@ -33,10 +29,10 @@ _window_del(void *data, Evas_Object *obj, void *event_info)
 }
 
 static void
-on_pressed(void *data, Evas_Object *obj, void *event_info)
+_on_pressed(void *data, Evas_Object *obj, void *event_info)
 {
   const char* key = elm_object_text_get(obj);
-  //printf("clicked: %s \n", key);
+  //printf("pressed: %s \n", key);
   ecore_x_test_fake_key_press(key);
 }
 
@@ -53,7 +49,6 @@ Evas_Object* window_new()
   evas_object_show(box);
 
   evas_object_resize(win, 256, 56);
-  //evas_object_resize(win, 64, 64);
   evas_object_show(win);
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
@@ -81,7 +76,7 @@ void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row)
 {
   Evas_Object* bt = elm_button_add(keyboard->win);
   elm_object_text_set(bt, keyname);
-  evas_object_smart_callback_add(bt, "pressed", on_pressed, NULL);
+  evas_object_smart_callback_add(bt, "pressed", _on_pressed, NULL);
   evas_object_size_hint_weight_set(bt, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   evas_object_size_hint_align_set(bt, EVAS_HINT_FILL, EVAS_HINT_FILL);
   elm_table_pack(keyboard->table, bt, col, row, 1, 1);
