@@ -10,6 +10,6 @@ struct _Keyboard
 };
 
 Keyboard* keyboard_new();
-void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row);
+void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height);
 
 #endif 

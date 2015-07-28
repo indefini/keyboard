@@ -15,6 +15,8 @@ extern "C" {
         keyboard : *const Keyboard,
         keyname : *const c_char,
         col : c_int,
-        row : c_int);
+        row : c_int,
+        width : c_int,
+        height : c_int);
 }
 
