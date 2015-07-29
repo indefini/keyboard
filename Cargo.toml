@@ -11,3 +11,6 @@ name = "keyboard"
 [dependencies.elementary-sys]
 path = "elementary-sys"
 
+[dependencies]
+#libc = "0.1"
+libc = "*"
