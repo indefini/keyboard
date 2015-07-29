@@ -12,8 +12,18 @@ extern "C" {
     pub fn run();
     pub fn kexit();
     pub fn reduce();
+
     pub fn keyboard_new() -> *const Keyboard;
+
     pub fn keyboard_add(
+        keyboard : *const Keyboard,
+        keyname : *const c_char,
+        col : c_int,
+        row : c_int,
+        width : c_int,
+        height : c_int);
+
+    pub fn keyboard_rect_add(
         keyboard : *const Keyboard,
         keyname : *const c_char,
         col : c_int,

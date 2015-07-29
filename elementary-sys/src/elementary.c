@@ -30,6 +30,7 @@ Evas_Object* table_new(Evas_Object* win)
   evas_object_size_hint_weight_set(tb, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   elm_win_resize_object_add(win, tb);
   elm_table_homogeneous_set(tb, EINA_TRUE);
+  elm_table_padding_set(tb, 10, 10);
   evas_object_show(tb);
 
   return tb;
@@ -64,18 +65,6 @@ _on_pressed_fn(void *data, Evas_Object *obj, void *event_info)
   }
 }
 
-static void
-_multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
-{
-   Evas_Event_Multi_Down *ev = event_info;
-   printf("MULTI: down @ %4i %4i | dev: %i\n", ev->canvas.x, ev->canvas.y, ev->device);
-   //if (ev->device >= IND_NUM) return;
-   //evas_object_move(indicator[ev->device], ev->canvas.x, ev->canvas.y);
-   //evas_object_resize(indicator[ev->device], 1, 1);
-   //evas_object_show(indicator[ev->device]);
-}
-
-
 Evas_Object* window_new()
 {
   Evas_Object* win = elm_win_util_standard_add("keyboard", "keyboard");
@@ -93,7 +82,7 @@ Evas_Object* window_new()
   //elm_win_override_set(win, EINA_TRUE);
   elm_win_screen_constrain_set(win, EINA_TRUE);
   elm_win_sticky_set(win, EINA_TRUE);
-  elm_win_borderless_set(win, EINA_TRUE);
+  //elm_win_borderless_set(win, EINA_TRUE);
 
   int dpx, dpy;
   elm_win_screen_dpi_get(win, &dpx, &dpy);
@@ -148,9 +137,54 @@ void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int
 {
   Evas_Object* bt = _keyboard_add(keyboard, keyname, col, row, width, height);
   evas_object_smart_callback_add(bt, "pressed", _on_pressed, NULL);
-  evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
-  
+  //evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
 }
+
+static void
+_rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
+{
+  evas_object_color_set(o, 0, 0, 255, 255);
+   Evas_Event_Mouse_Down *ev = event_info;
+
+   if (ev->button != 1) return;
+   printf("MOUSE: down @ %4i %4i\n", ev->canvas.x, ev->canvas.y);
+   //evas_object_move(indicator[0], ev->canvas.x, ev->canvas.y);
+   //evas_object_resize(indicator[0], 1, 1);
+   //evas_object_show(indicator[0]);
+}
+
+static void
+_multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
+{
+  evas_object_color_set(o, 0, 255, 0, 255);
+   Evas_Event_Multi_Down *ev = event_info;
+   printf("MULTI: down @ %4i %4i | dev: %i\n", ev->canvas.x, ev->canvas.y, ev->device);
+   //if (ev->device >= IND_NUM) return;
+   //evas_object_move(indicator[ev->device], ev->canvas.x, ev->canvas.y);
+   //evas_object_resize(indicator[ev->device], 1, 1);
+   //evas_object_show(indicator[ev->device]);
+}
+
+
+
+void keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
+{
+  Evas_Object* bt = evas_object_rectangle_add(evas_object_evas_get(keyboard->win));
+  //elm_object_text_set(bt, keyname);
+  evas_object_size_hint_weight_set(bt, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  evas_object_size_hint_align_set(bt, EVAS_HINT_FILL, EVAS_HINT_FILL);
+  elm_table_pack(keyboard->table, bt, col, row, width, height);
+  
+  evas_object_color_set(bt, 0, 255, 255, 255);
+
+  evas_object_size_hint_min_set(bt, 30, 30);
+  evas_object_show(bt);
+
+  //evas_object_smart_callback_add(bt, "pressed", _on_pressed, NULL);
+  evas_object_event_callback_add(bt, EVAS_CALLBACK_MOUSE_DOWN, _rect_down, NULL);
+  //evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
+}
+
 
 void keyboard_fn_add(
       Keyboard* keyboard,

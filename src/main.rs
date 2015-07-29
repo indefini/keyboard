@@ -71,7 +71,16 @@ fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
             }
             else {
                 unsafe { 
+                    /*
                     elm::keyboard_add(
+                        k,
+                        cstring_new(s[0]),
+                        pos as i32,
+                        row,
+                        (width*w) as i32,
+                        1);
+                        */
+                    elm::keyboard_rect_add(
                         k,
                         cstring_new(s[0]),
                         pos as i32,
