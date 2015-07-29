@@ -1,4 +1,3 @@
-#![feature(libc)]
 extern crate libc;
 extern crate elementary_sys as elm;
 
@@ -16,9 +15,6 @@ fn main() {
     let row2 = vec![ "z", "x", "c", "v", "b", "n", "m"];
     let row3 = vec![ "__close", "__empty,2", "space,4", "__empty,1", "Return", "BackSpace"];
 
-    //println!("yop : {}, {}", get_len(&row0), get_len(&row3));
-
-    //let rows = [ "qwertyuiop", "asdfghjkl", "zxcvbnm" ];
     let rows = vec![row0, row1, row2, row3];
 
     create_keyboard_with_table_buttons(&rows);
@@ -28,34 +24,37 @@ fn main() {
     }
 }
 
-
 fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
 {
     let width = 2;
 
     let mut max_col = 0;
     for r in rows.iter() {
-        max_col = cmp::max(max_col, get_len(r));
+        max_col = cmp::max(max_col, get_real_len(r));
     }
 
     let k = unsafe {elm::keyboard_new()};
 
     let mut row = 0;
     for r in rows.iter() {
+
         let mut col = 0;
-        //let first_pos = (max_col*width - width*get_len(r))/2;
-        //let first_pos = (max_col*width - width*r.len())/2;
         let first_pos = (max_col*width - width*get_real_len(r))/2;
+
         for c in (*r).iter() {
+
             let pos = first_pos + col*width;
             let s : Vec<&str> = c.split(',').collect();
+
             let w = if s.len() > 1 {
                 s[1].parse::<usize>().unwrap()
             }
             else {
                 1
             };
+
             if c.starts_with("__empty") {
+                //do nothing
             }
             else if c.starts_with("__close") {
                 unsafe { 
@@ -72,7 +71,13 @@ fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
             }
             else {
                 unsafe { 
-                    elm::keyboard_add(k, cstring_new(s[0]), pos as i32, row, (width*w) as i32, 1);
+                    elm::keyboard_add(
+                        k,
+                        cstring_new(s[0]),
+                        pos as i32,
+                        row,
+                        (width*w) as i32,
+                        1);
                 }
             }
             col = col +w;
@@ -92,9 +97,8 @@ extern fn close(data : *mut c_void) {
     unsafe { elm::reduce() };
 }
 
-fn get_len(v : &Vec<&str>) -> usize
+fn get_button_count(v : &Vec<&str>) -> usize
 {
-    //let l = v.iter().filter_map(|s| if s.starts_with("__empty") {Some(0)} else {None}).count();
     let l = v.iter().filter(|s| !s.starts_with("__empty")).count();
     l
 }
@@ -111,9 +115,8 @@ fn get_real_len(v : &Vec<&str>) -> usize
             1
         };
         l += w;
-            //if c.starts_with("__empty") {
-           // }
     }
+
     l
 }
 

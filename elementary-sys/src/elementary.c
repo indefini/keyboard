@@ -24,7 +24,6 @@ void reduce()
   elm_win_iconified_set(_win, EINA_TRUE);
 }
 
-
 Evas_Object* table_new(Evas_Object* win)
 {
   Evas_Object* tb = elm_table_add(win);
@@ -98,11 +97,11 @@ Evas_Object* window_new()
 
   int dpx, dpy;
   elm_win_screen_dpi_get(win, &dpx, &dpy);
-  printf("dpx, dpy %d, %d \n", dpx, dpy);
+  printf("screen dpx, dpy : %d, %d \n", dpx, dpy);
 
   int x, y, w, h;
   elm_win_screen_size_get(win, &x, &y, &w, &h);
-  printf("x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
+  printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
 
   int winh = h/3;
   //evas_object_resize(win, w, winh);

@@ -1,8 +1,6 @@
-#![feature(libc)]
 extern crate libc;
 
-use libc::{c_void, c_int, c_char, c_ulong, c_long, c_uint, c_uchar, size_t};
-use std::mem;
+use libc::{c_void, c_int, c_char};//, c_ulong, c_long, c_uint, c_uchar, size_t};
 
 pub type RustCb = extern fn(data : *mut c_void);
 
