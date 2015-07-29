@@ -168,7 +168,7 @@ _multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNU
          e, ev->canvas.x, ev->canvas.y, EINA_FALSE, EINA_FALSE);
 
    if (next != NULL) {
-    evas_object_color_set(o, 0, 255, 0, 255);
+    evas_object_color_set(next, 0, 255, 0, 255);
    }
 }
 
