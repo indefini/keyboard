@@ -156,13 +156,20 @@ _rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUS
 static void
 _multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
 {
-  evas_object_color_set(o, 0, 255, 0, 255);
+  evas_object_color_set(o,  255, 255, 0, 255);
    Evas_Event_Multi_Down *ev = event_info;
    printf("MULTI: down @ %4i %4i | dev: %i\n", ev->canvas.x, ev->canvas.y, ev->device);
    //if (ev->device >= IND_NUM) return;
    //evas_object_move(indicator[ev->device], ev->canvas.x, ev->canvas.y);
    //evas_object_resize(indicator[ev->device], 1, 1);
    //evas_object_show(indicator[ev->device]);
+
+   Evas_Object* next = evas_object_top_at_xy_get(
+         e, ev->canvas.x, ev->canvas.y, EINA_FALSE, EINA_FALSE);
+
+   if (next != NULL) {
+    evas_object_color_set(o, 0, 255, 0, 255);
+   }
 }
 
 
@@ -182,7 +189,7 @@ void keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row
 
   //evas_object_smart_callback_add(bt, "pressed", _on_pressed, NULL);
   evas_object_event_callback_add(bt, EVAS_CALLBACK_MOUSE_DOWN, _rect_down, NULL);
-  //evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
+  evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
 }
 
 
