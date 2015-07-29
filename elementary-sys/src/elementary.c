@@ -93,11 +93,11 @@ Evas_Object* window_new()
   printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
 
   int winh = h/3;
-  //evas_object_resize(win, w, winh);
-  //elm_win_size_base_set(win, w, winh);
-  //evas_object_move(win, 0, h - winh);
+  evas_object_resize(win, w, winh);
+  elm_win_size_base_set(win, w, winh);
+  evas_object_move(win, 0, h - winh);
   //test size
-  evas_object_resize(win, 206, 56);
+  //evas_object_resize(win, 206, 56);
 
   //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
@@ -167,7 +167,9 @@ _multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNU
    Evas_Object* next = evas_object_top_at_xy_get(
          e, ev->canvas.x, ev->canvas.y, EINA_FALSE, EINA_FALSE);
 
+
    if (next != NULL) {
+     printf("next is %s \n", evas_object_type_get(next));
     evas_object_color_set(next, 0, 255, 0, 255);
    }
 }
