@@ -198,11 +198,11 @@ Evas_Object* window_new()
   printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
 
   int winh = h/3;
-  //evas_object_resize(win, w, winh);
-  //elm_win_size_base_set(win, w, winh);
-  //evas_object_move(win, 0, h - winh);
+  evas_object_resize(win, w, winh);
+  elm_win_size_base_set(win, w, winh);
+  evas_object_move(win, 0, h - winh);
   //test size
-  evas_object_resize(win, 206, 56);
+  //evas_object_resize(win, 206, 56);
 
   //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
@@ -310,13 +310,35 @@ void keyboard_fn_add(
 }
 
 static void
-_call_pressed_cb(Evas_Object* o, int x, int y)
+_call_pressed_cb(Evas_Object* o, int device, int x, int y)
 {
    pressed_cb* cb = evas_object_data_get(o, "cb");
 
    if (cb) {
      void* cb_data = evas_object_data_get(o, "cb_data");
-     cb(cb_data, x, y);
+     cb(cb_data, device, x, y);
+   }
+}
+
+static void
+_call_up_cb(Evas_Object* o, int device, int x, int y)
+{
+   pressed_cb* cb_up = evas_object_data_get(o, "cb_up");
+
+   if (cb_up) {
+     void* cb_data = evas_object_data_get(o, "cb_data");
+     cb_up(cb_data, device, x, y);
+   }
+}
+
+static void
+_call_move_cb(Evas_Object* o, int device, int x, int y)
+{
+   pressed_cb* cb_move = evas_object_data_get(o, "cb_move");
+
+   if (cb_move) {
+     void* cb_data = evas_object_data_get(o, "cb_data");
+     cb_move(cb_data, device, x, y);
    }
 }
 
@@ -325,18 +347,50 @@ _rect_mouse_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EIN
 {
    Evas_Event_Mouse_Down *ev = event_info;
    if (ev->button != 1) return;
-   _call_pressed_cb(o, ev->canvas.x, ev->canvas.y);
+   _call_pressed_cb(o, 0, ev->canvas.x, ev->canvas.y);
+}
+
+static void
+_rect_mouse_up(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
+{
+   Evas_Event_Mouse_Up *ev = event_info;
+   if (ev->button != 1) return;
+   _call_up_cb(o, 0, ev->canvas.x, ev->canvas.y);
+}
+
+static void
+_rect_mouse_move(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
+{
+   Evas_Event_Mouse_Move *ev = event_info;
+   _call_move_cb(o, 0, ev->cur.canvas.x, ev->cur.canvas.y);
 }
 
 static void
 _rect_multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
 {
    Evas_Event_Multi_Down *ev = event_info;
-   _call_pressed_cb(o, ev->canvas.x, ev->canvas.y);
+   _call_pressed_cb(o, ev->device, ev->canvas.x, ev->canvas.y);
 }
+
+static void
+_rect_multi_up(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
+{
+   Evas_Event_Multi_Up *ev = event_info;
+   _call_up_cb(o, ev->device, ev->canvas.x, ev->canvas.y);
+}
+
+static void
+_rect_multi_move(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
+{
+   Evas_Event_Multi_Move *ev = event_info;
+   _call_move_cb(o, ev->device, ev->cur.canvas.x, ev->cur.canvas.y);
+}
+
 
 void keyboard_bg_add(
       pressed_cb cb,
+      pressed_cb cb_up,
+      pressed_cb cb_move,
       void* cb_data)
 {
   Evas_Object* r = evas_object_rectangle_add(evas_object_evas_get(_win));
@@ -346,14 +400,16 @@ void keyboard_bg_add(
   evas_object_show(r);
 
   evas_object_data_set(r, "cb", cb);
+  evas_object_data_set(r, "cb_up", cb_up);
   evas_object_data_set(r, "cb_data", cb_data);
+  evas_object_data_set(r, "cb_move", cb_move);
 
   evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_DOWN, _rect_mouse_down, NULL);
-  //evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_UP, _mouse_up, NULL);
-  //evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_MOVE, _mouse_move, NULL);
+  evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_UP, _rect_mouse_up, NULL);
+  evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_MOVE, _rect_mouse_move, NULL);
   evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_DOWN, _rect_multi_down, NULL);
-  //evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_UP, _multi_up, NULL);
-  //evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_MOVE, _multi_move, NULL);
+  evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_UP, _rect_multi_up, NULL);
+  evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_MOVE, _rect_multi_move, NULL);
 
 }
 

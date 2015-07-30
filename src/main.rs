@@ -14,19 +14,27 @@ pub enum KeyKind
     Func(elm::RustCb)
 }
 
-
 pub struct Key
 {
     eo : *mut elm::Evas_Object,
     name : String,
     kind : KeyKind,
+    down : bool,
+    device : i32
+}
+
+#[derive(Copy, Clone)]
+pub struct Touch
+{
+    x : i32,
+    y : i32,
     down : bool
 }
 
 pub struct Container
 {
     keys : Vec<Vec<Key>>,
-
+    touch : [Touch;10]
 }
 
 fn main() {
@@ -39,7 +47,10 @@ fn main() {
 
     let rows = vec![row0, row1, row2, row3];
 
-    let mut container = Container {keys : Vec::new()};
+    let mut container = Container {
+        keys : Vec::new(),
+        touch : [Touch {x:0, y:0, down:false}; 10]
+    };
 
     create_keyboard_with_rects(&rows, &mut container);
 
@@ -55,7 +66,9 @@ fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container
     let k = unsafe {elm::keyboard_new()};
     create_keys(k, rows, container);
     unsafe {elm::keyboard_bg_add(
-            pressed,
+            input_down,
+            input_up,
+            input_move,
             mem::transmute(container))
     };
 }
@@ -129,7 +142,8 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                         eo : r,
                         name : String::from(s[0]), 
                         kind : KeyKind::Normal(String::from(s[0])),
-                        down : false
+                        down : false,
+                        device : 0
                     };
                     col_keys.push(key);
                 }
@@ -158,14 +172,16 @@ extern fn close(data : *mut c_void) {
     unsafe { elm::reduce() };
 }
 
-extern fn pressed(data : *mut c_void, x : c_int, y : c_int) {
+extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
     //println!("pressed {}, {}", x, y);
     let con : &mut Container = unsafe { mem::transmute(data) };
+    con.touch[device as usize].down = true;
 
     for c in con.keys.iter_mut() {
         for k in c.iter_mut() {
-            if unsafe {elm::is_point_inside(k.eo, x, y)} {
+            if !k.down && unsafe {elm::is_point_inside(k.eo, x, y)} {
                 k.down = true;
+                k.device = device;
                 //println!("found object {} ", k.name);
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.kind {
@@ -181,9 +197,51 @@ extern fn pressed(data : *mut c_void, x : c_int, y : c_int) {
             }
         }
     }
-
 }
 
+extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
+    let con : &mut Container = unsafe { mem::transmute(data) };
+    con.touch[device as usize].down = false;
+
+    for c in con.keys.iter_mut() {
+        for k in c.iter_mut() {
+            if k.down && unsafe {elm::is_point_inside(k.eo, x, y)} {
+                k.down = false;
+                //println!("found object {} ", k.name);
+                unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
+            }
+        }
+    }
+}
+
+extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
+    let con : &mut Container = unsafe { mem::transmute(data) };
+    for c in con.keys.iter_mut() {
+        for k in c.iter_mut() {
+            if k.down {
+                if k.device == device && unsafe {!elm::is_point_inside(k.eo, x, y)} {
+                    k.down = false;
+                    //println!("found object {} ", k.name);
+                    unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
+                }
+            }
+            else if unsafe {elm::is_point_inside(k.eo, x, y)} {
+                k.down = true;
+                k.device = device;
+                unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
+                match k.kind {
+                    KeyKind::Normal(ref s) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_press(cstring_new(s));
+                        }
+                        
+                    },
+                    _ => {}
+                }
+            }
+        }
+    }
+}
 
 fn get_button_count(v : &Vec<&str>) -> usize
 {

@@ -3,7 +3,7 @@ extern crate libc;
 use libc::{c_void, c_int, c_char};//, c_ulong, c_long, c_uint, c_uchar, size_t};
 
 pub type RustCb = extern fn(data : *mut c_void);
-pub type PressedCb = extern fn(data : *mut c_void, x : c_int, y : c_int);
+pub type PressedCb = extern fn(data : *mut c_void, device : c_int, x : c_int, y : c_int);
 
 #[repr(C)]
 pub struct Keyboard;
@@ -47,6 +47,8 @@ extern "C" {
 
     pub fn keyboard_bg_add(
         cb : PressedCb,
+        cb_up : PressedCb,
+        cb_move : PressedCb,
         cb_data : *const c_void);
 
     pub fn is_point_inside(o : *const Evas_Object, x : c_int, y : c_int) -> bool;
