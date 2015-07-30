@@ -36,7 +36,6 @@ _rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUS
    //evas_object_resize(indicator[0], 1, 1);
    //evas_object_show(indicator[0]);
 
-   /*
    Eina_List* obs = evas_objects_at_xy_get(
          e, 
          //evas_object_evas_get(o), 
@@ -58,7 +57,6 @@ _rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUS
        evas_object_color_set(next, 0, 100, 0, 255);
      }
    }
-   */
 
 }
 
