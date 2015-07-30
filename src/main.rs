@@ -5,7 +5,29 @@ use std::cmp;
 use std::ptr;
 use std::ffi::CString;
 //use libc::{c_void, c_int, c_char, c_ulong, c_long, c_uint, c_uchar, size_t};
-use libc::{c_char, c_void};
+use libc::{c_char, c_void, c_int};
+use std::mem;
+
+pub enum KeyKind
+{
+    Normal(String),
+    Func(elm::RustCb)
+}
+
+
+pub struct Key
+{
+    eo : *mut elm::Evas_Object,
+    name : String,
+    kind : KeyKind,
+    down : bool
+}
+
+pub struct Container
+{
+    keys : Vec<Vec<Key>>,
+
+}
 
 fn main() {
     unsafe { elm::init() };
@@ -17,14 +39,28 @@ fn main() {
 
     let rows = vec![row0, row1, row2, row3];
 
-    create_keyboard_with_table_buttons(&rows);
+    let mut container = Container {keys : Vec::new()};
+
+    create_keyboard_with_rects(&rows, &mut container);
+
+    //create_keyboard_with_table_buttons(&rows);
 
     unsafe {
         elm::run();
     }
 }
 
-fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
+fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container)
+{
+    let k = unsafe {elm::keyboard_new()};
+    create_keys(k, rows, container);
+    unsafe {elm::keyboard_bg_add(
+            pressed,
+            mem::transmute(container))
+    };
+}
+
+fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut Container)
 {
     let width = 2;
 
@@ -33,13 +69,14 @@ fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
         max_col = cmp::max(max_col, get_real_len(r));
     }
 
-    let k = unsafe {elm::keyboard_new()};
 
     let mut row = 0;
     for r in rows.iter() {
 
         let mut col = 0;
         let first_pos = (max_col*width - width*get_real_len(r))/2;
+
+        let mut col_keys = Vec::new();
 
         for c in (*r).iter() {
 
@@ -80,20 +117,35 @@ fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
                         (width*w) as i32,
                         1);
                         */
-                    elm::keyboard_rect_add(
+                    let r = elm::keyboard_rect_add(
                         k,
                         cstring_new(s[0]),
                         pos as i32,
                         row,
                         (width*w) as i32,
                         1);
+
+                    let key = Key {
+                        eo : r,
+                        name : String::from(s[0]), 
+                        kind : KeyKind::Normal(String::from(s[0])),
+                        down : false
+                    };
+                    col_keys.push(key);
                 }
             }
             col = col +w;
         }
         row = row + 1;
+        container.keys.push(col_keys);
     }
 
+}
+
+fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
+{
+    let k = unsafe {elm::keyboard_new()};
+    //create_keys(k, rows);
 }
 
 fn cstring_new(s : &str) -> *const c_char
@@ -105,6 +157,33 @@ fn cstring_new(s : &str) -> *const c_char
 extern fn close(data : *mut c_void) {
     unsafe { elm::reduce() };
 }
+
+extern fn pressed(data : *mut c_void, x : c_int, y : c_int) {
+    //println!("pressed {}, {}", x, y);
+    let con : &mut Container = unsafe { mem::transmute(data) };
+
+    for c in con.keys.iter_mut() {
+        for k in c.iter_mut() {
+            if unsafe {elm::is_point_inside(k.eo, x, y)} {
+                k.down = true;
+                //println!("found object {} ", k.name);
+                unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
+                match k.kind {
+                    KeyKind::Normal(ref s) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_press(cstring_new(s));
+                        }
+                        
+                    },
+                    _ => {}
+                }
+                break;
+            }
+        }
+    }
+
+}
+
 
 fn get_button_count(v : &Vec<&str>) -> usize
 {

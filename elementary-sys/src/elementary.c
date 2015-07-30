@@ -2,6 +2,8 @@
 #include "keyboard.h"
 
 Evas_Object* _win;
+Evas_Object* _table;
+Eina_List* _btns = NULL;
 
 void init()
 {
@@ -32,6 +34,11 @@ _rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUS
 
    if (ev->button != 1) return;
    printf("MOUSE: down @ %4i %4i\n", ev->canvas.x, ev->canvas.y);
+
+   int x, y, w, h;
+   evas_object_geometry_get(_table, &x, &y, &w, &h);
+   printf("table geom : %d, %d, %d, %d\n", x, y, w, h);
+
    //evas_object_move(indicator[0], ev->canvas.x, ev->canvas.y);
    //evas_object_resize(indicator[0], 1, 1);
    //evas_object_show(indicator[0]);
@@ -118,6 +125,7 @@ _multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNU
 Evas_Object* table_new(Evas_Object* win)
 {
   Evas_Object* tb = elm_table_add(win);
+  _table = tb;
   evas_object_name_set(tb, "table");
   evas_object_size_hint_weight_set(tb, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   elm_win_resize_object_add(win, tb);
@@ -175,7 +183,7 @@ Evas_Object* window_new()
   //evas_object_event_callback_add(bg, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
-  //elm_win_prop_focus_skip_set(win, EINA_TRUE);
+  elm_win_prop_focus_skip_set(win, EINA_TRUE);
   //elm_win_override_set(win, EINA_TRUE);
   elm_win_screen_constrain_set(win, EINA_TRUE);
   elm_win_sticky_set(win, EINA_TRUE);
@@ -190,11 +198,11 @@ Evas_Object* window_new()
   printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
 
   int winh = h/3;
-  evas_object_resize(win, w, winh);
-  elm_win_size_base_set(win, w, winh);
-  evas_object_move(win, 0, h - winh);
+  //evas_object_resize(win, w, winh);
+  //elm_win_size_base_set(win, w, winh);
+  //evas_object_move(win, 0, h - winh);
   //test size
-  //evas_object_resize(win, 206, 56);
+  evas_object_resize(win, 206, 56);
 
   //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
@@ -237,25 +245,51 @@ void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int
   //evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
 }
 
-void keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
+Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
 {
-  Evas_Object* bt = evas_object_rectangle_add(evas_object_evas_get(keyboard->win));
+  Evas* e = evas_object_evas_get(keyboard->win);
+
+  Evas_Object* bt = evas_object_rectangle_add(e);
+  _btns = eina_list_append(_btns, bt);
   evas_object_name_set(bt, keyname);
   evas_object_size_hint_weight_set(bt, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   evas_object_size_hint_align_set(bt, EVAS_HINT_FILL, EVAS_HINT_FILL);
   elm_table_pack(keyboard->table, bt, col, row, width, height);
 
+
   //evas_object_layer_set(bt, 10);
   //evas_object_raise(bt);
   
-  evas_object_color_set(bt, 0, 255, 255, 255);
+  evas_object_color_set(bt, 80, 80, 80, 255);
 
   evas_object_size_hint_min_set(bt, 30, 30);
   evas_object_show(bt);
 
   //evas_object_smart_callback_add(bt, "pressed", _on_pressed, NULL);
-  evas_object_event_callback_add(bt, EVAS_CALLBACK_MOUSE_DOWN, _rect_down, NULL);
-  evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
+  //evas_object_event_callback_add(bt, EVAS_CALLBACK_MOUSE_DOWN, _rect_down, NULL);
+  //evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
+  
+  Evas_Object* t = evas_object_text_add(e);
+  evas_object_text_style_set(t, EVAS_TEXT_STYLE_PLAIN);
+  evas_object_color_set(t, 200, 200, 200, 255);
+  evas_object_text_font_set(t, "Ubuntu", 10);
+  evas_object_size_hint_padding_set(t, 15, 10, 0, 0);
+  evas_object_size_hint_weight_set(t, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  evas_object_size_hint_align_set(t, EVAS_HINT_FILL, EVAS_HINT_FILL);
+  //evas_object_size_hint_align_set(t, 0.2, 0.1);
+  elm_table_pack(keyboard->table, t, col, row, width, height);
+  evas_object_text_text_set(t, keyname);
+  evas_object_raise(t);
+  evas_object_show(t);
+
+  /*
+  int size;
+  const char *font;
+  evas_object_text_font_get(t, &font, &size);
+  fprintf(stdout, "Adding text object with font %s, size %d\n", font, size);
+  */
+
+  return bt;
 }
 
 
@@ -275,3 +309,61 @@ void keyboard_fn_add(
   evas_object_smart_callback_add(bt, "pressed", _on_pressed_fn, NULL);
 }
 
+static void
+_call_pressed_cb(Evas_Object* o, int x, int y)
+{
+   pressed_cb* cb = evas_object_data_get(o, "cb");
+
+   if (cb) {
+     void* cb_data = evas_object_data_get(o, "cb_data");
+     cb(cb_data, x, y);
+   }
+}
+
+static void
+_rect_mouse_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
+{
+   Evas_Event_Mouse_Down *ev = event_info;
+   if (ev->button != 1) return;
+   _call_pressed_cb(o, ev->canvas.x, ev->canvas.y);
+}
+
+static void
+_rect_multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
+{
+   Evas_Event_Multi_Down *ev = event_info;
+   _call_pressed_cb(o, ev->canvas.x, ev->canvas.y);
+}
+
+void keyboard_bg_add(
+      pressed_cb cb,
+      void* cb_data)
+{
+  Evas_Object* r = evas_object_rectangle_add(evas_object_evas_get(_win));
+  evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  evas_object_color_set(r, 0, 0, 0, 0);
+  elm_win_resize_object_add(_win, r);
+  evas_object_show(r);
+
+  evas_object_data_set(r, "cb", cb);
+  evas_object_data_set(r, "cb_data", cb_data);
+
+  evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_DOWN, _rect_mouse_down, NULL);
+  //evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_UP, _mouse_up, NULL);
+  //evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_MOVE, _mouse_move, NULL);
+  evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_DOWN, _rect_multi_down, NULL);
+  //evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_UP, _multi_up, NULL);
+  //evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_MOVE, _multi_move, NULL);
+
+}
+
+Eina_Bool
+is_point_inside(Evas_Object* o, int x, int y)
+{
+  int ox, oy, ow, oh;
+  evas_object_geometry_get(o, &ox, &oy, &ow, &oh);
+
+  return 
+   x >= ox && x <= ox + ow &&
+   y >= oy && y <= oy + oh;
+}

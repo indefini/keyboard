@@ -10,6 +10,7 @@ struct _Keyboard
 };
 
 typedef void (rust_cb)(void* data);
+typedef void (pressed_cb)(void* data, int x, int y);
 
 Keyboard* keyboard_new();
 void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height);
@@ -23,5 +24,11 @@ void keyboard_fn_add(
       int row,
       int width,
       int height);
+
+void keyboard_bg_add(
+      pressed_cb cb,
+      void* cb_data);
+
+Eina_Bool is_point_inside(Evas_Object* o, int x, int y);
 
 #endif 
