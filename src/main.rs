@@ -40,9 +40,9 @@ pub struct Container
 fn main() {
     unsafe { elm::init() };
 
-    let row0 = vec![ "q", "w", "e", "r", "t", "y", "u", "i", "o", "p" ];
-    let row1 = vec![ "a", "s", "d", "f", "g", "h", "j", "k", "l" ];
-    let row2 = vec![ "z", "x", "c", "v", "b", "n", "m"];
+    let row0 = vec![ "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[","]" ];//, r"\" ];
+    let row1 = vec![ "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" ];
+    let row2 = vec![ "z", "x", "c", "v", "b", "n", "m", "<", ">", "?"];
     let row3 = vec![ "__close", "__empty,2", "space,4", "__empty,1", "Return", "BackSpace"];
 
     let rows = vec![row0, row1, row2, row3];
@@ -199,7 +199,8 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
     }
 }
 
-extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
+extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
+{
     let con : &mut Container = unsafe { mem::transmute(data) };
     con.touch[device as usize].down = false;
 
@@ -214,8 +215,13 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
     }
 }
 
-extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
+extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
+{
     let con : &mut Container = unsafe { mem::transmute(data) };
+    if !con.touch[device as usize].down {
+        return;
+    }
+
     for c in con.keys.iter_mut() {
         for k in c.iter_mut() {
             if k.down {
