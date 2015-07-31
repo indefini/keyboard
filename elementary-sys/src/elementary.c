@@ -128,9 +128,14 @@ Evas_Object* table_new(Evas_Object* win)
   _table = tb;
   evas_object_name_set(tb, "table");
   evas_object_size_hint_weight_set(tb, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  //evas_object_size_hint_align_set(tb, EVAS_HINT_FILL, EVAS_HINT_FILL);
+  //evas_object_size_hint_min_set(tb, 100, 100);
+  //evas_object_size_hint_max_set(tb, 200, 200);
   elm_win_resize_object_add(win, tb);
   elm_table_homogeneous_set(tb, EINA_TRUE);
-  elm_table_padding_set(tb, 10, 10);
+  elm_table_padding_set(tb, 2, 2);
+  //elm_table_align_set(tb, EVAS_HINT_FILL, EVAS_HINT_FILL);
+  //elm_table_align_set(tb, 0, 0);
   evas_object_show(tb);
 
   return tb;
@@ -198,11 +203,11 @@ Evas_Object* window_new()
   printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
 
   int winh = h/3;
-  evas_object_resize(win, w, winh);
-  elm_win_size_base_set(win, w, winh);
-  evas_object_move(win, 0, h - winh);
+  //evas_object_resize(win, w, winh);
+  //elm_win_size_base_set(win, w, winh);
+  //evas_object_move(win, 0, h - winh);
   //test size
-  //evas_object_resize(win, 206, 56);
+  evas_object_resize(win, 206, 156);
 
   //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
@@ -245,6 +250,12 @@ void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int
   //evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
 }
 
+int mm_to_px(float mm, int dpi)
+{
+    float f = ((float)dpi )/ 25.4f * mm;
+    return (int) f;
+}
+
 Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
 {
   Evas* e = evas_object_evas_get(keyboard->win);
@@ -256,19 +267,18 @@ Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col,
   evas_object_size_hint_align_set(bt, EVAS_HINT_FILL, EVAS_HINT_FILL);
   elm_table_pack(keyboard->table, bt, col, row, width, height);
 
-
   //evas_object_layer_set(bt, 10);
   //evas_object_raise(bt);
   
   evas_object_color_set(bt, 80, 80, 80, 255);
 
-  evas_object_size_hint_min_set(bt, 30, 30);
+
+  int dpx, dpy;
+  elm_win_screen_dpi_get(keyboard->win, &dpx, &dpy);
+  //evas_object_size_hint_min_set(bt, mm_to_px(5, dpx) , mm_to_px(5, dpy));
+  //evas_object_size_hint_max_set(bt, mm_to_px(15, dpx) , mm_to_px(15, dpy));
   evas_object_show(bt);
 
-  //evas_object_smart_callback_add(bt, "pressed", _on_pressed, NULL);
-  //evas_object_event_callback_add(bt, EVAS_CALLBACK_MOUSE_DOWN, _rect_down, NULL);
-  //evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
-  
   Evas_Object* t = evas_object_text_add(e);
   evas_object_text_style_set(t, EVAS_TEXT_STYLE_PLAIN);
   evas_object_color_set(t, 200, 200, 200, 255);
@@ -422,4 +432,9 @@ is_point_inside(Evas_Object* o, int x, int y)
   return 
    x >= ox && x <= ox + ow &&
    y >= oy && y <= oy + oh;
+}
+
+void elm_dpi_get(const Keyboard* k, int* dpix, int *dpiy)
+{
+  elm_win_screen_dpi_get(k->win, dpix, dpiy);
 }

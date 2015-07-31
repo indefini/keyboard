@@ -41,11 +41,12 @@ fn main() {
     unsafe { elm::init() };
 
     let row0 = vec![ "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[","]" ];//, r"\" ];
-    let row1 = vec![ "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" ];
-    let row2 = vec![ "z", "x", "c", "v", "b", "n", "m", "<", ">", "?"];
+    let row1 = vec![ "__empty,0.2", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" ];
+    let row2 = vec![ "__empty,0.4","z", "x", "c", "v", "b", "n", "m", "<", ">", "?"];
     let row3 = vec![ "__close", "__empty,2", "space,4", "__empty,1", "Return", "BackSpace"];
 
     let rows = vec![row0, row1, row2, row3];
+
 
     let mut container = Container {
         keys : Vec::new(),
@@ -64,6 +65,9 @@ fn main() {
 fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container)
 {
     let k = unsafe {elm::keyboard_new()};
+    let (dpix, dpiy) = elm::get_dpi(k);
+    println!("dpi : {}, {}", dpix, dpiy);
+
     create_keys(k, rows, container);
     unsafe {elm::keyboard_bg_add(
             input_down,
@@ -75,19 +79,21 @@ fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container
 
 fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut Container)
 {
-    let width = 2;
+    let width = 10f32;
 
-    let mut max_col = 0;
+    let mut max_col = 0f32;
     for r in rows.iter() {
-        max_col = cmp::max(max_col, get_real_len(r));
+        //max_col = cmp::max(max_col, get_real_len(r));
+        max_col = max_col.max(get_real_len(r));
     }
 
 
     let mut row = 0;
     for r in rows.iter() {
 
-        let mut col = 0;
-        let first_pos = (max_col*width - width*get_real_len(r))/2;
+        let mut col = 0f32;
+        //let first_pos = (max_col*width - width*get_real_len(r))/2f32;
+        let first_pos = 0f32;// (max_col*width - width*get_real_len(r))/2f32;
 
         let mut col_keys = Vec::new();
 
@@ -97,16 +103,18 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
             let s : Vec<&str> = c.split(',').collect();
 
             let w = if s.len() > 1 {
-                s[1].parse::<usize>().unwrap()
+                //s[1].parse::<usize>().unwrap()
+                s[1].parse::<f32>().unwrap()
             }
             else {
-                1
+                1f32
             };
 
             if c.starts_with("__empty") {
                 //do nothing
             }
             else if c.starts_with("__close") {
+                /*
                 unsafe { 
                     elm::keyboard_fn_add(
                         k,
@@ -118,6 +126,23 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                         width as i32,
                         1);
                 }
+                */
+                let r = unsafe {elm::keyboard_rect_add(
+                    k,
+                    cstring_new(&c[2..]),
+                    pos as i32,
+                    row,
+                    (width *w) as i32,
+                    1)};
+
+                let key = Key {
+                    eo : r,
+                    name : String::from(s[0]), 
+                    kind : KeyKind::Func(close),
+                    down : false,
+                    device : 0
+                };
+                col_keys.push(key);
             }
             else {
                 unsafe { 
@@ -135,7 +160,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                         cstring_new(s[0]),
                         pos as i32,
                         row,
-                        (width*w) as i32,
+                        (width *w) as i32,
                         1);
 
                     let key = Key {
@@ -189,9 +214,12 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                         unsafe {
                             elm::ecore_x_test_fake_key_press(cstring_new(s));
                         }
-                        
                     },
-                    _ => {}
+                    KeyKind::Func(ref cb) => {
+                        unsafe {
+                            cb(data);
+                        }
+                    }
                 }
                 break;
             }
@@ -242,7 +270,11 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                         }
                         
                     },
-                    _ => {}
+                    KeyKind::Func(ref cb) => {
+                        unsafe {
+                            cb(data);
+                        }
+                    }
                 }
             }
         }
@@ -255,16 +287,16 @@ fn get_button_count(v : &Vec<&str>) -> usize
     l
 }
 
-fn get_real_len(v : &Vec<&str>) -> usize
+fn get_real_len(v : &Vec<&str>) -> f32
 {
-    let mut l = 0;
+    let mut l = 0f32;
     for c in v.iter() {
         let s : Vec<&str> = c.split(',').collect();
         let w = if s.len() > 1 {
-            s[1].parse::<usize>().unwrap()
+            s[1].parse::<f32>().unwrap()
         }
         else {
-            1
+            1f32
         };
         l += w;
     }
@@ -272,4 +304,8 @@ fn get_real_len(v : &Vec<&str>) -> usize
     l
 }
 
-
+fn mm_to_px(mm : f32, dpi : i32) -> i32
+{
+    let f = (dpi as f32) / 254f32 * mm;
+    f as i32
+}

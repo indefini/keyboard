@@ -55,6 +55,16 @@ extern "C" {
     //pub fn fake_key(keyname : *const c_char);
     pub fn ecore_x_test_fake_key_press(keyname : *const c_char);
     pub fn evas_object_color_set(o : *mut Evas_Object, r : c_int, g : c_int, b : c_int, a : c_int); 
+    fn elm_dpi_get(win : *const Keyboard, dpix : *mut c_int, dpiy : *mut c_int);
+}
+
+pub fn get_dpi(k : *const Keyboard) -> (i32, i32)
+{
+    let mut dpix =0;
+    let mut dpiy =0;
+    unsafe {elm_dpi_get(k, &mut dpix, &mut dpiy); }
+
+    (dpix, dpiy)
 }
 
 
