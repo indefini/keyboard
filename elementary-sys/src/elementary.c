@@ -128,10 +128,10 @@ Evas_Object* table_new(Evas_Object* win)
   _table = tb;
   evas_object_name_set(tb, "table");
   evas_object_size_hint_weight_set(tb, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-  //evas_object_size_hint_align_set(tb, EVAS_HINT_FILL, EVAS_HINT_FILL);
+  evas_object_size_hint_align_set(tb, EVAS_HINT_FILL, EVAS_HINT_FILL);
   //evas_object_size_hint_min_set(tb, 100, 100);
-  //evas_object_size_hint_max_set(tb, 200, 200);
-  elm_win_resize_object_add(win, tb);
+  //evas_object_size_hint_max_set(tb, 700, 500);
+  //elm_win_resize_object_add(win, tb);
   elm_table_homogeneous_set(tb, EINA_TRUE);
   elm_table_padding_set(tb, 2, 2);
   //elm_table_align_set(tb, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -212,7 +212,6 @@ Evas_Object* window_new()
   //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
 
-
   evas_object_show(win);
   return win;
 }
@@ -221,6 +220,36 @@ Keyboard* keyboard_new()
 {
   Evas_Object* win = window_new();
   Evas_Object* table = table_new(win);
+
+  //chris
+  ///*
+  Evas* e = evas_object_evas_get(win);
+  Evas_Object*box = evas_object_box_add(e);
+  evas_object_resize(box, 1900, 200);
+  evas_object_size_hint_min_set(box, 25, 37);
+  evas_object_size_hint_max_set(box, 500, 200);
+  evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
+  evas_object_size_hint_aspect_set(box, EVAS_ASPECT_CONTROL_BOTH, 1, 1);
+  //elm_win_resize_object_add(win, box);
+
+  evas_object_show(box);
+  /*
+  Evas_Object* r = evas_object_rectangle_add(e);
+  evas_object_resize(r, 50, 75);
+  evas_object_size_hint_min_set(r, 25, 37);
+  evas_object_size_hint_max_set(r, 500, 750);
+
+  //evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  //elm_win_resize_object_add(win, r);
+  
+  evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  evas_object_size_hint_align_set(r, EVAS_HINT_FILL, EVAS_HINT_FILL);
+  evas_object_color_set(r, 100, 200, 20, 255);
+  evas_object_show(r);
+  */
+  evas_object_box_append(box, table);
+
 
   Keyboard* k = calloc(1, sizeof *k);
   k->win = win;
