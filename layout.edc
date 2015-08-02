@@ -3,7 +3,8 @@ collections {
       image: "logo.png" COMP;
    }
    group { name: "main";
-      max: 100 100;
+      min : 200 200;
+      max: 300 300;
       parts {
          part { name: "rect";
             
@@ -13,7 +14,7 @@ collections {
                rel2.relative: 1.0 1.0;
                image.normal:"logo.png";
                aspect:1 1;
-               aspect_preference: BOTH;
+               //aspect_preference: BOTH;
                /*color: 223 136 170 255;*/
             }
          }

@@ -170,6 +170,80 @@ _on_pressed_fn(void *data, Evas_Object *obj, void *event_info)
   }
 }
 
+static Evas_Object *
+_create_stack(Evas *evas)//, const struct opts *opts)
+{
+   Evas_Object *stack = evas_object_box_add(evas);
+   if (!stack)
+     {
+        fputs("ERROR: could not create object stack (box).\n", stderr);
+        return NULL;
+     }
+   evas_object_box_layout_set(stack, evas_object_box_layout_stack, NULL, NULL);
+   //evas_object_resize(stack, opts->size.w, opts->size.h);
+   evas_object_resize(stack, 300, 300);
+   evas_object_size_hint_weight_set(stack, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+   evas_object_size_hint_align_set(stack, EVAS_HINT_FILL, EVAS_HINT_FILL);
+   evas_object_show(stack);
+   return stack;
+}
+
+static void
+_reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *event_info EINA_UNUSED)
+{
+   Evas_Coord minw, minh;
+   Evas_Object *edje = data;
+
+   edje_object_size_min_get(edje, &minw, &minh);
+   if ((minw <= 0) && (minh <= 0))
+     edje_object_size_min_calc(edje, &minw, &minh);
+
+   evas_object_size_hint_min_set(stack, minw, minh);
+}
+
+Evas_Object* edje_test(Evas* e)
+{
+   Evas_Object *edje;
+   edje = edje_object_add(e);
+   if (!edje){
+     EINA_LOG_CRIT("could not create edje object!");
+     return NULL;
+   }
+   if (!edje_object_file_set(edje, "layout.edj", "main")) {
+        int err = edje_object_load_error_get(edje);
+        const char *errmsg = edje_load_error_str(err);
+        EINA_LOG_ERR("could not load 'my_group' from edje_example.edj: %s",
+                     errmsg);
+        evas_object_del(edje);
+        return NULL;
+   }
+   /*
+   if (!edje_object_part_text_set(edje, "text", text)) {
+     EINA_LOG_WARN("could not set the text. "
+           "Maybe part 'text' does not exist?");
+   }
+   */
+
+   //evas_object_move(edje, 0, 0);
+   //evas_object_resize(edje, 100, 100);
+
+   Evas_Coord minw, minh, maxw, maxh;
+
+   edje_object_size_max_get(edje, &maxw, &maxh);
+   edje_object_size_min_get(edje, &minw, &minh);
+   if ((minw <= 0) && (minh <= 0))
+   edje_object_size_min_calc(edje, &minw, &minh);
+
+   evas_object_size_hint_max_set(edje, maxw, maxh);
+   evas_object_size_hint_min_set(edje, minw, minh);
+
+   evas_object_size_hint_align_set(edje, EVAS_HINT_FILL, EVAS_HINT_FILL);
+   evas_object_size_hint_weight_set(edje, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+
+   evas_object_show(edje);
+   return edje;
+}
+
 Evas_Object* window_new()
 {
   Evas_Object* win = elm_win_util_standard_add("keyboard", "keyboard");
@@ -211,6 +285,20 @@ Evas_Object* window_new()
 
   //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
+
+  Evas* e = evas_object_evas_get(win);
+  Evas_Object* edje = edje_test(e);
+  //elm_win_resize_object_add(win, edje);
+
+  Evas_Object* stack = _create_stack(e);
+  evas_object_box_append(stack, edje);
+  evas_object_event_callback_add(stack, EVAS_CALLBACK_CHANGED_SIZE_HINTS,
+                                  _reset_size_hints, edje);
+
+  elm_win_resize_object_add(win, stack);
+
+
+
 
   evas_object_show(win);
   return win;
