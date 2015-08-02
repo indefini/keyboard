@@ -133,7 +133,7 @@ Evas_Object* table_new(Evas_Object* win)
   //evas_object_size_hint_max_set(tb, 700, 500);
   //elm_win_resize_object_add(win, tb);
   elm_table_homogeneous_set(tb, EINA_TRUE);
-  elm_table_padding_set(tb, 2, 2);
+  elm_table_padding_set(tb, 14, 14);
   //elm_table_align_set(tb, EVAS_HINT_FILL, EVAS_HINT_FILL);
   //elm_table_align_set(tb, 0, 0);
   evas_object_show(tb);
@@ -179,9 +179,10 @@ _create_stack(Evas *evas)//, const struct opts *opts)
         fputs("ERROR: could not create object stack (box).\n", stderr);
         return NULL;
      }
-   evas_object_box_layout_set(stack, evas_object_box_layout_stack, NULL, NULL);
+   //evas_object_box_layout_set(stack, evas_object_box_layout_stack, NULL, NULL);
+   evas_object_box_layout_set(stack, evas_object_box_layout_vertical, NULL, NULL);
    //evas_object_resize(stack, opts->size.w, opts->size.h);
-   evas_object_resize(stack, 300, 300);
+   //evas_object_resize(stack, 300, 300);
    evas_object_size_hint_weight_set(stack, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
    evas_object_size_hint_align_set(stack, EVAS_HINT_FILL, EVAS_HINT_FILL);
    evas_object_show(stack);
@@ -263,7 +264,7 @@ Evas_Object* window_new()
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
   elm_win_prop_focus_skip_set(win, EINA_TRUE);
-  //elm_win_override_set(win, EINA_TRUE);
+  elm_win_override_set(win, EINA_TRUE);
   elm_win_screen_constrain_set(win, EINA_TRUE);
   elm_win_sticky_set(win, EINA_TRUE);
   //elm_win_borderless_set(win, EINA_TRUE);
@@ -276,28 +277,15 @@ Evas_Object* window_new()
   elm_win_screen_size_get(win, &x, &y, &w, &h);
   printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
 
-  int winh = h/3;
-  //evas_object_resize(win, w, winh);
-  //elm_win_size_base_set(win, w, winh);
-  //evas_object_move(win, 0, h - winh);
+  int winh = h/2.5;
+  evas_object_resize(win, w, winh);
+  elm_win_size_base_set(win, w, winh);
+  evas_object_move(win, 0, h - winh);
   //test size
-  evas_object_resize(win, 206, 156);
+  //evas_object_resize(win, 206, 156);
 
   //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
-
-  Evas* e = evas_object_evas_get(win);
-  Evas_Object* edje = edje_test(e);
-  //elm_win_resize_object_add(win, edje);
-
-  Evas_Object* stack = _create_stack(e);
-  evas_object_box_append(stack, edje);
-  evas_object_event_callback_add(stack, EVAS_CALLBACK_CHANGED_SIZE_HINTS,
-                                  _reset_size_hints, edje);
-
-  elm_win_resize_object_add(win, stack);
-
-
 
 
   evas_object_show(win);
@@ -310,7 +298,7 @@ Keyboard* keyboard_new()
   Evas_Object* table = table_new(win);
 
   //chris
-  ///*
+  /*
   Evas* e = evas_object_evas_get(win);
   Evas_Object*box = evas_object_box_add(e);
   evas_object_resize(box, 1900, 200);
@@ -322,6 +310,7 @@ Keyboard* keyboard_new()
   //elm_win_resize_object_add(win, box);
 
   evas_object_show(box);
+  */
   /*
   Evas_Object* r = evas_object_rectangle_add(e);
   evas_object_resize(r, 50, 75);
@@ -336,7 +325,22 @@ Keyboard* keyboard_new()
   evas_object_color_set(r, 100, 200, 20, 255);
   evas_object_show(r);
   */
-  evas_object_box_append(box, table);
+  //evas_object_box_append(box, table);
+
+  //elm_win_resize_object_add(win, table);
+
+
+  Evas* e = evas_object_evas_get(win);
+  Evas_Object* edje = edje_test(e);
+
+  Evas_Object* stack = _create_stack(e);
+  evas_object_box_append(stack, edje);
+  evas_object_event_callback_add(stack, EVAS_CALLBACK_CHANGED_SIZE_HINTS,
+                                  _reset_size_hints, edje);
+
+  elm_win_resize_object_add(win, stack);
+
+  edje_object_part_swallow(edje, "rect", table);
 
 
   Keyboard* k = calloc(1, sizeof *k);

@@ -41,8 +41,8 @@ fn main() {
     unsafe { elm::init() };
 
     let row0 = vec![ "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[","]" ];//, r"\" ];
-    let row1 = vec![ "__empty,0.2", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" ];
-    let row2 = vec![ "__empty,0.4","z", "x", "c", "v", "b", "n", "m", "<", ">", "?"];
+    let row1 = vec![ "__empty,0.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" ];
+    let row2 = vec![ "__empty,0.6","z", "x", "c", "v", "b", "n", "m", "<", ">", "?"];
     let row3 = vec![ "__close", "__empty,2", "space,4", "__empty,1", "Return", "BackSpace"];
 
     let rows = vec![row0, row1, row2, row3];

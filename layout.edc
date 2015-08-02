@@ -3,17 +3,17 @@ collections {
       image: "logo.png" COMP;
    }
    group { name: "main";
-      min : 200 200;
-      max: 300 300;
+      min : 50 20;
+      max: 2300 700;
       parts {
          part { name: "rect";
             
-            type: IMAGE;
+            type: SWALLOW;
              description { state: "default" 0.0;
                rel1.relative: 0.0 0.0;
                rel2.relative: 1.0 1.0;
-               image.normal:"logo.png";
-               aspect:1 1;
+               //image.normal:"logo.png";
+               //aspect:1 1;
                //aspect_preference: BOTH;
                /*color: 223 136 170 255;*/
             }
