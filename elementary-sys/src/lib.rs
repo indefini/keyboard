@@ -17,7 +17,8 @@ extern "C" {
     pub fn kexit();
     pub fn reduce();
 
-    pub fn keyboard_new() -> *mut Keyboard;
+    pub fn window_new() -> *const Evas_Object;
+    pub fn keyboard_new(win : *const Evas_Object) -> *mut Keyboard;
 
     pub fn keyboard_add(
         keyboard : *const Keyboard,
@@ -58,13 +59,13 @@ extern "C" {
     fn elm_dpi_get(win : *const Keyboard, dpix : *mut c_int, dpiy : *mut c_int);
 }
 
-pub fn get_dpi(k : *const Keyboard) -> (i32, i32)
+pub fn get_dpi(k : *const Keyboard) -> (usize, usize)
 {
     let mut dpix =0;
     let mut dpiy =0;
     unsafe {elm_dpi_get(k, &mut dpix, &mut dpiy); }
 
-    (dpix, dpiy)
+    (dpix as usize, dpiy as usize)
 }
 
 

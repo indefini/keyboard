@@ -213,7 +213,7 @@ Evas_Object* edje_test(Evas* e)
    if (!edje_object_file_set(edje, "layout.edj", "main")) {
         int err = edje_object_load_error_get(edje);
         const char *errmsg = edje_load_error_str(err);
-        EINA_LOG_ERR("could not load 'my_group' from edje_example.edj: %s",
+        EINA_LOG_ERR("could not load 'my_group' from .edj file: %s",
                      errmsg);
         evas_object_del(edje);
         return NULL;
@@ -269,10 +269,19 @@ Evas_Object* window_new()
   elm_win_sticky_set(win, EINA_TRUE);
   //elm_win_borderless_set(win, EINA_TRUE);
 
+  //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
+  //ecore_x_e_virtual_keyboard_set(
+
+
+  evas_object_show(win);
+  return win;
+}
+
+Keyboard* keyboard_new(Evas_Object* win)
+{
+  //Evas_Object* win = window_new();
   int dpx, dpy;
   elm_win_screen_dpi_get(win, &dpx, &dpy);
-  printf("screen dpx, dpy : %d, %d \n", dpx, dpy);
-
   int x, y, w, h;
   elm_win_screen_size_get(win, &x, &y, &w, &h);
   printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
@@ -284,17 +293,9 @@ Evas_Object* window_new()
   //test size
   //evas_object_resize(win, 206, 156);
 
-  //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
-  //ecore_x_e_virtual_keyboard_set(
 
+  printf("screen dpx, dpy : %d, %d \n", dpx, dpy);
 
-  evas_object_show(win);
-  return win;
-}
-
-Keyboard* keyboard_new()
-{
-  Evas_Object* win = window_new();
   Evas_Object* table = table_new(win);
 
   //chris
