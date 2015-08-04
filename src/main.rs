@@ -45,10 +45,11 @@ pub struct Container
 fn main() {
     unsafe { elm::init() };
 
-    let row0 = vec![ "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[","]" ];//, r"\" ];
-    let row1 = vec![ "__empty,0.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" ];
-    let row2 = vec![ "__empty,0.6","z", "x", "c", "v", "b", "n", "m", "<", ">", "?"];
-    let row3 = vec![ "__close", "__empty,2", "space,4", "__empty,1", "Return", "BackSpace"];
+    //let rownum = vec![ "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-","^", r"\" ];
+    let row0 = vec![ "Escape","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@","[" ];//, r"\" ];
+    let row1 = vec![ "Tab,1.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":" ];
+    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
+    let row3 = vec![ "__reduce", "__close", "__empty,1", "space,4", "__empty,1", "Return", "BackSpace"];
 
     let rows = vec![row0, row1, row2, row3];
 
@@ -140,7 +141,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
             if c.starts_with("__empty") {
                 //do nothing
             }
-            else if c.starts_with("__close") {
+            else if c.starts_with("__reduce") {
                 /*
                 unsafe { 
                     elm::keyboard_fn_add(
@@ -154,6 +155,24 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                         1);
                 }
                 */
+                let r = unsafe {elm::keyboard_rect_add(
+                    k,
+                    cstring_new(&c[2..]),
+                    pos as i32,
+                    row,
+                    (width *w) as i32,
+                    1)};
+
+                let key = Key {
+                    eo : r,
+                    name : String::from(s[0]), 
+                    kind : KeyKind::Func(reduce),
+                    down : false,
+                    device : 0
+                };
+                col_keys.push(key);
+            }
+            else if c.starts_with("__close") {
                 let r = unsafe {elm::keyboard_rect_add(
                     k,
                     cstring_new(&c[2..]),
@@ -221,9 +240,14 @@ fn cstring_new(s : &str) -> *const c_char
     CString::new(s).unwrap().as_ptr()
 }
 
-extern fn close(data : *mut c_void) {
+extern fn reduce(data : *mut c_void) {
     unsafe { elm::reduce() };
 }
+
+extern fn close(data : *mut c_void) {
+    unsafe { elm::kexit() };
+}
+
 
 extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
     //println!("pressed {}, {}", x, y);

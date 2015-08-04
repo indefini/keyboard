@@ -202,7 +202,7 @@ _reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *eve
    evas_object_size_hint_min_set(stack, minw, minh);
 }
 
-Evas_Object* edje_test(Evas* e)
+Evas_Object* edje_test(Evas* e, int width, int height)
 {
    Evas_Object *edje;
    edje = edje_object_add(e);
@@ -229,9 +229,12 @@ Evas_Object* edje_test(Evas* e)
    //evas_object_resize(edje, 100, 100);
 
    Evas_Coord minw, minh, maxw, maxh;
+   edje_edit_group_max_w_set(edje, width);
+   edje_edit_group_max_h_set(edje, height);
 
    edje_object_size_max_get(edje, &maxw, &maxh);
    edje_object_size_min_get(edje, &minw, &minh);
+   printf("edje max %d, %d \n", maxw, maxh);
    if ((minw <= 0) && (minh <= 0))
    edje_object_size_min_calc(edje, &minw, &minh);
 
@@ -334,7 +337,9 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
 
   Evas* e = evas_object_evas_get(win);
-  Evas_Object* edje = edje_test(e);
+  Evas_Object* edje = edje_test(e, px, py);
+  edje_edit_group_max_w_set(edje, 721);
+  //edje_edit_group_max_h_set(edje, py);
 
   Evas_Object* stack = _create_stack(e);
   evas_object_box_append(stack, edje);
@@ -344,6 +349,7 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
   elm_win_resize_object_add(win, stack);
 
   edje_object_part_swallow(edje, "rect", table);
+
 
 
   Keyboard* k = calloc(1, sizeof *k);
@@ -400,7 +406,7 @@ Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col,
   int dpx, dpy;
   elm_win_screen_dpi_get(keyboard->win, &dpx, &dpy);
   //evas_object_size_hint_min_set(bt, mm_to_px(5, dpx) , mm_to_px(5, dpy));
-  evas_object_size_hint_max_set(bt, mm_to_px(15, dpx) , mm_to_px(15, dpy));
+  //evas_object_size_hint_max_set(bt, mm_to_px(15, dpx) , mm_to_px(15, dpy));
   evas_object_show(bt);
 
   Evas_Object* t = evas_object_text_add(e);
@@ -414,7 +420,7 @@ Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col,
   elm_table_pack(keyboard->table, t, col, row, width, height);
   evas_object_text_text_set(t, keyname);
   evas_object_raise(t);
-  evas_object_size_hint_max_set(t, mm_to_px(15, dpx) , mm_to_px(15, dpy));
+  //evas_object_size_hint_max_set(t, mm_to_px(15, dpx) , mm_to_px(15, dpy));
   evas_object_show(t);
 
   /*

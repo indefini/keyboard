@@ -4,7 +4,7 @@ collections {
    }
    group { name: "main";
       min : 50 20;
-      max: 2300 700;
+      max: 2721 700;
       parts {
          part { name: "rect";
             
