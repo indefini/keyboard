@@ -12,7 +12,7 @@ struct _Keyboard
 typedef void (rust_cb)(void* data);
 typedef void (pressed_cb)(void* data, int device, int x, int y);
 
-Keyboard* keyboard_new(Evas_Object* win);
+Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx, int ksy);
 void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height);
 
 void keyboard_fn_add(
