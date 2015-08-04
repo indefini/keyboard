@@ -10,8 +10,8 @@ use std::mem;
 
 const KEY_X_MM : f32 = 15f32;
 const KEY_Y_MM : f32 = 15f32;
-const KEYSPACE_X_MM : f32 = 1f32;
-const KEYSPACE_Y_MM : f32 = 1f32;
+const KEYSPACE_X_MM : f32 = 2f32;
+const KEYSPACE_Y_MM : f32 = 2f32;
 
 pub enum KeyKind
 {
@@ -97,9 +97,12 @@ fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>)
 fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container)
 {
     let win = unsafe {elm::window_new()};
-    let (dpix, dpiy) = elm::get_dpi(win);
+    let (dpix, dpiy, w, h) = elm::get_dpi_size(win);
     println!("dpix, dpiy {}, {}", dpix, dpiy);
-    let (px, py, kx, ky, ksx, ksy) = calc_keyboard_size(dpix, dpiy, rows);
+    let (mut px, mut py, kx, ky, ksx, ksy) = calc_keyboard_size(dpix, dpiy, rows);
+    //px = cmp::min(px, w);
+    //py = cmp::min(py, h);
+
     println!("px, py {}, {}, key space {}, {}", px, py, ksx, ksy);
     let k = unsafe {elm::keyboard_new(win, px as i32, py as i32, kx as i32, ky as i32, ksx as i32, ksy as i32)};
 
@@ -206,7 +209,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                         cstring_new(s[0]),
                         pos as i32,
                         row,
-                        (width *w) as i32,
+                        (width *w + 0.5f32) as i32,
                         1);
 
                     let key = Key {
@@ -241,7 +244,19 @@ fn cstring_new(s : &str) -> *const c_char
 }
 
 extern fn reduce(data : *mut c_void) {
-    unsafe { elm::reduce() };
+    let con : &mut Container = unsafe { mem::transmute(data) };
+    for t in con.touch.iter_mut() {
+      t.down = false;
+    }
+
+    for c in con.keys.iter_mut() {
+        for k in c.iter_mut() {
+          k.down = false;
+          unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
+        }
+    }
+
+  unsafe { elm::reduce() };
 }
 
 extern fn close(data : *mut c_void) {
@@ -361,3 +376,4 @@ fn mm_to_px(mm : f32, dpi : usize) -> usize
     let f = (dpi as f32) / 25.4f32 * mm;
     f as usize
 }
+

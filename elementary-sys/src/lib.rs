@@ -65,15 +65,22 @@ extern "C" {
     pub fn ecore_x_test_fake_key_press(keyname : *const c_char);
     pub fn evas_object_color_set(o : *mut Evas_Object, r : c_int, g : c_int, b : c_int, a : c_int); 
     fn elm_win_screen_dpi_get(win : *const Evas_Object, dpix : *mut c_int, dpiy : *mut c_int);
+    fn elm_win_screen_size_get(win : *const Evas_Object, x : *mut c_int, y : *mut c_int, w : *mut c_int, h : *mut c_int);
 }
 
-pub fn get_dpi(win : *const Evas_Object) -> (usize, usize)
+pub fn get_dpi_size(win : *const Evas_Object) -> (usize, usize, usize, usize)
 {
     let mut dpix =0;
     let mut dpiy =0;
-    unsafe {elm_win_screen_dpi_get(win, &mut dpix, &mut dpiy); }
+    unsafe { elm_win_screen_dpi_get(win, &mut dpix, &mut dpiy); }
 
-    (dpix as usize, dpiy as usize)
+    let mut x =0;
+    let mut y =0;
+    let mut w =0;
+    let mut h =0;
+    unsafe { elm_win_screen_size_get(win, &mut x, &mut y, &mut w, &mut h); }
+
+    (dpix as usize, dpiy as usize, w as usize, h as usize)
 }
 
 

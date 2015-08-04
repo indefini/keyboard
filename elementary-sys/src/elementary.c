@@ -267,7 +267,7 @@ Evas_Object* window_new()
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
   elm_win_prop_focus_skip_set(win, EINA_TRUE);
-  //elm_win_override_set(win, EINA_TRUE);
+  elm_win_override_set(win, EINA_TRUE);
   elm_win_screen_constrain_set(win, EINA_TRUE);
   elm_win_sticky_set(win, EINA_TRUE);
   //elm_win_borderless_set(win, EINA_TRUE);
@@ -290,7 +290,7 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
   //printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
 
   //int winh = h/2.5;
-  evas_object_resize(win, px, py);
+  evas_object_resize(win, w, py);
   //elm_win_size_base_set(win, , winh);
   evas_object_move(win, 0, h - py);
   //test size
