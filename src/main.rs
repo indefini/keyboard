@@ -8,6 +8,11 @@ use std::ffi::CString;
 use libc::{c_char, c_void, c_int};
 use std::mem;
 
+const KEY_X_MM : f32 = 15f32;
+const KEY_Y_MM : f32 = 15f32;
+const KEYSPACE_X_MM : f32 = 1f32;
+const KEYSPACE_Y_MM : f32 = 1f32;
+
 pub enum KeyKind
 {
     Normal(String),
@@ -62,11 +67,40 @@ fn main() {
     }
 }
 
+fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>) 
+    -> (usize, usize, usize, usize, usize, usize)
+{
+    let mut max_col = 0f32;
+    for r in rows.iter() {
+        //max_col = cmp::max(max_col, get_real_len(r));
+        max_col = max_col.max(get_real_len(r));
+    }
+
+    let rows_num = rows.len() as f32;
+
+    let width_mm = max_col * KEY_X_MM + (max_col - 1f32) * KEYSPACE_X_MM;
+    let height_mm = rows_num * KEY_Y_MM + (rows_num - 1f32) * KEYSPACE_Y_MM;
+
+    let width_px = mm_to_px(width_mm, dpix);
+    let height_px = mm_to_px(height_mm, dpix);
+
+    (
+        width_px, height_px,
+        mm_to_px(KEY_X_MM, dpix),
+        mm_to_px(KEY_Y_MM, dpiy),
+        mm_to_px(KEYSPACE_X_MM, dpix),
+        mm_to_px(KEYSPACE_Y_MM, dpiy),
+     )
+}
+
 fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container)
 {
-    let k = unsafe {elm::keyboard_new()};
-    let (dpix, dpiy) = elm::get_dpi(k);
-    println!("dpi : {}, {}", dpix, dpiy);
+    let win = unsafe {elm::window_new()};
+    let (dpix, dpiy) = elm::get_dpi(win);
+    println!("dpix, dpiy {}, {}", dpix, dpiy);
+    let (px, py, kx, ky, ksx, ksy) = calc_keyboard_size(dpix, dpiy, rows);
+    println!("px, py {}, {}, key space {}, {}", px, py, ksx, ksy);
+    let k = unsafe {elm::keyboard_new(win, px as i32, py as i32, kx as i32, ky as i32, ksx as i32, ksy as i32)};
 
     create_keys(k, rows, container);
     unsafe {elm::keyboard_bg_add(
@@ -80,13 +114,6 @@ fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container
 fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut Container)
 {
     let width = 10f32;
-
-    let mut max_col = 0f32;
-    for r in rows.iter() {
-        //max_col = cmp::max(max_col, get_real_len(r));
-        max_col = max_col.max(get_real_len(r));
-    }
-
 
     let mut row = 0;
     for r in rows.iter() {
@@ -183,7 +210,8 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
 
 fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
 {
-    let k = unsafe {elm::keyboard_new()};
+    let win = unsafe {elm::window_new()};
+    //let k = unsafe {elm::keyboard_new(win)};
     //create_keys(k, rows);
 }
 
@@ -304,8 +332,8 @@ fn get_real_len(v : &Vec<&str>) -> f32
     l
 }
 
-fn mm_to_px(mm : f32, dpi : i32) -> i32
+fn mm_to_px(mm : f32, dpi : usize) -> usize
 {
-    let f = (dpi as f32) / 254f32 * mm;
-    f as i32
+    let f = (dpi as f32) / 25.4f32 * mm;
+    f as usize
 }

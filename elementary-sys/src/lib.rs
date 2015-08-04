@@ -17,7 +17,16 @@ extern "C" {
     pub fn kexit();
     pub fn reduce();
 
-    pub fn keyboard_new() -> *mut Keyboard;
+    pub fn window_new() -> *const Evas_Object;
+    pub fn keyboard_new(
+        win : *const Evas_Object,
+        px : c_int,
+        py : c_int,
+        kx : c_int,
+        ky : c_int,
+        ksx : c_int,
+        ksy : c_int,
+        ) -> *mut Keyboard;
 
     pub fn keyboard_add(
         keyboard : *const Keyboard,
@@ -55,16 +64,16 @@ extern "C" {
     //pub fn fake_key(keyname : *const c_char);
     pub fn ecore_x_test_fake_key_press(keyname : *const c_char);
     pub fn evas_object_color_set(o : *mut Evas_Object, r : c_int, g : c_int, b : c_int, a : c_int); 
-    fn elm_dpi_get(win : *const Keyboard, dpix : *mut c_int, dpiy : *mut c_int);
+    fn elm_win_screen_dpi_get(win : *const Evas_Object, dpix : *mut c_int, dpiy : *mut c_int);
 }
 
-pub fn get_dpi(k : *const Keyboard) -> (i32, i32)
+pub fn get_dpi(win : *const Evas_Object) -> (usize, usize)
 {
     let mut dpix =0;
     let mut dpiy =0;
-    unsafe {elm_dpi_get(k, &mut dpix, &mut dpiy); }
+    unsafe {elm_win_screen_dpi_get(win, &mut dpix, &mut dpiy); }
 
-    (dpix, dpiy)
+    (dpix as usize, dpiy as usize)
 }
 
 
