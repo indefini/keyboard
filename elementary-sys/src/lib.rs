@@ -63,7 +63,9 @@ extern "C" {
     pub fn is_point_inside(o : *const Evas_Object, x : c_int, y : c_int) -> bool;
     //pub fn fake_key(keyname : *const c_char);
     pub fn ecore_x_test_fake_key_press(keyname : *const c_char);
-    pub fn evas_object_color_set(o : *mut Evas_Object, r : c_int, g : c_int, b : c_int, a : c_int); 
+    pub fn ecore_x_test_fake_key_down(keyname : *const c_char);
+    pub fn ecore_x_test_fake_key_up(keyname : *const c_char);
+    pub fn evas_object_color_set(o : *mut Evas_Object, r : c_int, g : c_int, b : c_int, a : c_int);
     fn elm_win_screen_dpi_get(win : *const Evas_Object, dpix : *mut c_int, dpiy : *mut c_int);
     fn elm_win_screen_size_get(win : *const Evas_Object, x : *mut c_int, y : *mut c_int, w : *mut c_int, h : *mut c_int);
 }

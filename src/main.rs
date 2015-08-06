@@ -16,7 +16,8 @@ const KEYSPACE_Y_MM : f32 = 2f32;
 pub enum KeyKind
 {
     Normal(String),
-    Func(elm::RustCb)
+    Func(elm::RustCb),
+    //Modifier(String)
 }
 
 pub struct Key
@@ -39,8 +40,21 @@ pub struct Touch
 pub struct Container
 {
     keys : Vec<Vec<Key>>,
-    touch : [Touch;10]
+    touch : [Touch;10],
+    shift : bool
 }
+
+/*
+impl Container
+{
+    fn handle_normal_key(&mut self, s : &str)
+    {
+        unsafe {
+            elm::ecore_x_test_fake_key_press(cstring_new(s));
+        }
+    }
+}
+*/
 
 fn main() {
     unsafe { elm::init() };
@@ -56,7 +70,8 @@ fn main() {
 
     let mut container = Container {
         keys : Vec::new(),
-        touch : [Touch {x:0, y:0, down:false}; 10]
+        touch : [Touch {x:0, y:0, down:false}; 10],
+        shift : false
     };
 
     create_keyboard_with_rects(&rows, &mut container);
@@ -68,7 +83,7 @@ fn main() {
     }
 }
 
-fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>) 
+fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>)
     -> (usize, usize, usize, usize, usize, usize)
 {
     let mut max_col = 0f32;
@@ -146,14 +161,14 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
             }
             else if c.starts_with("__reduce") {
                 /*
-                unsafe { 
+                unsafe {
                     elm::keyboard_fn_add(
                         k,
                         cstring_new(&c[2..]),
                         close,
                         ptr::null(),
                         pos as i32,
-                        row, 
+                        row,
                         width as i32,
                         1);
                 }
@@ -168,7 +183,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
 
                 let key = Key {
                     eo : r,
-                    name : String::from(s[0]), 
+                    name : String::from(s[0]),
                     kind : KeyKind::Func(reduce),
                     down : false,
                     device : 0
@@ -186,7 +201,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
 
                 let key = Key {
                     eo : r,
-                    name : String::from(s[0]), 
+                    name : String::from(s[0]),
                     kind : KeyKind::Func(close),
                     down : false,
                     device : 0
@@ -194,7 +209,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                 col_keys.push(key);
             }
             else {
-                unsafe { 
+                unsafe {
                     /*
                     elm::keyboard_add(
                         k,
@@ -214,7 +229,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
 
                     let key = Key {
                         eo : r,
-                        name : String::from(s[0]), 
+                        name : String::from(s[0]),
                         kind : KeyKind::Normal(String::from(s[0])),
                         down : false,
                         device : 0
@@ -278,9 +293,19 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.kind {
                     KeyKind::Normal(ref s) => {
-                        unsafe {
-                            elm::ecore_x_test_fake_key_press(cstring_new(s));
+                        //con.handle_normal_key(s);
+                        if s == "Shift_L" && !con.shift {
+                            con.shift = true;
+                            unsafe {
+                             elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
                         }
+                        else {
+                            unsafe {
+                             elm::ecore_x_test_fake_key_press(cstring_new(s));
+                            }
+                        }
+
                     },
                     KeyKind::Func(ref cb) => {
                         unsafe {
@@ -302,6 +327,12 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
     for c in con.keys.iter_mut() {
         for k in c.iter_mut() {
             if k.down && unsafe {elm::is_point_inside(k.eo, x, y)} {
+                if k.name == "Shift_L" {
+                     con.shift = false;
+                    unsafe {
+                     elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+                     }
+                }
                 k.down = false;
                 //println!("found object {} ", k.name);
                 unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
@@ -324,6 +355,12 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     k.down = false;
                     //println!("found object {} ", k.name);
                     unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
+                    if k.name == "Shift_L" {
+                         con.shift = false;
+                        unsafe {
+                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+                        }
+                    }
                 }
             }
             else if unsafe {elm::is_point_inside(k.eo, x, y)} {
@@ -332,10 +369,18 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.kind {
                     KeyKind::Normal(ref s) => {
+                        if s == "Shift_L" && !con.shift {
+                            con.shift = true;
+                            unsafe {
+                             elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
+                        }
+                        else {
                         unsafe {
                             elm::ecore_x_test_fake_key_press(cstring_new(s));
                         }
-                        
+                        }
+
                     },
                     KeyKind::Func(ref cb) => {
                         unsafe {
