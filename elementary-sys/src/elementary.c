@@ -23,6 +23,9 @@ void kexit()
 
 void reduce()
 {
+  //Eina_Bool b = elm_win_iconified_get(_win);
+  //printf("window icon : %d \n", b);
+
   elm_win_iconified_set(_win, EINA_TRUE);
 }
 
@@ -44,8 +47,8 @@ _rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUS
    //evas_object_show(indicator[0]);
 
    Eina_List* obs = evas_objects_at_xy_get(
-         e, 
-         //evas_object_evas_get(o), 
+         e,
+         //evas_object_evas_get(o),
          ev->canvas.x, ev->canvas.y, EINA_TRUE, EINA_FALSE);
 
    printf("mouse eina list count : %d \n", eina_list_count(obs));
@@ -86,8 +89,8 @@ _multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNU
    //evas_object_show(indicator[ev->device]);
 
    Eina_List* obs = evas_objects_at_xy_get(
-         //e, 
-         evas_object_evas_get(o), 
+         //e,
+         evas_object_evas_get(o),
          ev->canvas.x, ev->canvas.y, EINA_TRUE, EINA_TRUE);
 
    printf("eina list count : %d \n", eina_list_count(obs));
@@ -250,7 +253,8 @@ Evas_Object* edje_test(Evas* e, int width, int height)
 
 Evas_Object* window_new()
 {
-  Evas_Object* win = elm_win_util_standard_add("keyboard", "keyboard");
+  //Evas_Object* win = elm_win_util_standard_add("keyboard", "keyboard");
+  Evas_Object* win = elm_win_add(NULL, "keyboard", ELM_WIN_DOCK);
   evas_object_name_set(win, strdup("win"));
   _win = win;
   elm_win_autodel_set(win, EINA_TRUE);
@@ -267,10 +271,10 @@ Evas_Object* window_new()
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
   elm_win_prop_focus_skip_set(win, EINA_TRUE);
-  elm_win_override_set(win, EINA_TRUE);
+  //elm_win_override_set(win, EINA_TRUE);
   elm_win_screen_constrain_set(win, EINA_TRUE);
   elm_win_sticky_set(win, EINA_TRUE);
-  //elm_win_borderless_set(win, EINA_TRUE);
+  elm_win_borderless_set(win, EINA_TRUE);
 
   //Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
@@ -325,7 +329,7 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   //evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   //elm_win_resize_object_add(win, r);
-  
+
   evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   evas_object_size_hint_align_set(r, EVAS_HINT_FILL, EVAS_HINT_FILL);
   evas_object_color_set(r, 100, 200, 20, 255);
@@ -369,7 +373,7 @@ static Evas_Object* _keyboard_add(Keyboard* keyboard, const char* keyname, int c
 
   evas_object_size_hint_min_set(bt, 30, 30);
   evas_object_show(bt);
-  
+
   return bt;
 }
 
@@ -399,7 +403,7 @@ Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col,
 
   //evas_object_layer_set(bt, 10);
   //evas_object_raise(bt);
-  
+
   evas_object_color_set(bt, 80, 80, 80, 255);
 
 
@@ -560,7 +564,7 @@ is_point_inside(Evas_Object* o, int x, int y)
   int ox, oy, ow, oh;
   evas_object_geometry_get(o, &ox, &oy, &ow, &oh);
 
-  return 
+  return
    x >= ox && x <= ox + ow &&
    y >= oy && y <= oy + oh;
 }

@@ -56,17 +56,32 @@ impl Container
 }
 */
 
+fn rows4<'a>() -> Vec<Vec<&'a str>>
+{
+    let row0 = vec![ "Escape","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "BackSpace,1.3" ];//, r"\" ];
+    let row1 = vec![ "Tab,1.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":","],1,bracketright", "Return" ];
+    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
+    let row3 = vec![ "Control_L,1.6", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
+
+    vec![row0, row1, row2, row3]
+}
+
+fn rowsnum<'a>() -> Vec<Vec<&'a str>>
+{
+    let rownum = vec![ "Escape", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-","^", r"\" ];
+    let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@","[" ];//, r"\" ];
+    let row1 = vec![ "__empty,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":" ];
+    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
+    let row3 = vec![ "Control_L,1.9", "__empty,3", "space,4", "__empty,2", "__reduce", "__close"];
+
+    vec![rownum, row0, row1, row2, row3]
+}
+
 fn main() {
     unsafe { elm::init() };
 
-    //let rownum = vec![ "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-","^", r"\" ];
-    let row0 = vec![ "Escape","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@","[" ];//, r"\" ];
-    let row1 = vec![ "Tab,1.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":" ];
-    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
-    let row3 = vec![ "__reduce", "__close", "__empty,1", "space,4", "__empty,1", "Return", "BackSpace"];
-
-    let rows = vec![row0, row1, row2, row3];
-
+    let rows = rows4();
+    //let rows = rowsnum();
 
     let mut container = Container {
         keys : Vec::new(),
@@ -156,6 +171,14 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                 1f32
             };
 
+            let realkey = if s.len() > 2 {
+                //s[1].parse::<usize>().unwrap()
+                s[2]
+            }
+            else {
+                s[0]
+            };
+
             if c.starts_with("__empty") {
                 //do nothing
             }
@@ -230,7 +253,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                     let key = Key {
                         eo : r,
                         name : String::from(s[0]),
-                        kind : KeyKind::Normal(String::from(s[0])),
+                        kind : KeyKind::Normal(String::from(realkey)),
                         down : false,
                         device : 0
                     };
@@ -260,6 +283,7 @@ fn cstring_new(s : &str) -> *const c_char
 
 extern fn reduce(data : *mut c_void) {
     let con : &mut Container = unsafe { mem::transmute(data) };
+
     for t in con.touch.iter_mut() {
       t.down = false;
     }
@@ -289,7 +313,6 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
             if !k.down && unsafe {elm::is_point_inside(k.eo, x, y)} {
                 k.down = true;
                 k.device = device;
-                //println!("found object {} ", k.name);
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.kind {
                     KeyKind::Normal(ref s) => {
@@ -405,6 +428,7 @@ fn get_real_len(v : &Vec<&str>) -> f32
     for c in v.iter() {
         let s : Vec<&str> = c.split(',').collect();
         let w = if s.len() > 1 {
+            println!("process : {}", s[1]);
             s[1].parse::<f32>().unwrap()
         }
         else {
