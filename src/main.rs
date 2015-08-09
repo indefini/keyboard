@@ -8,8 +8,8 @@ use std::ffi::CString;
 use libc::{c_char, c_void, c_int};
 use std::mem;
 
-const KEY_X_MM : f32 = 15f32;
-const KEY_Y_MM : f32 = 15f32;
+const KEY_X_MM : f32 = 17f32;
+const KEY_Y_MM : f32 = 17f32;
 const KEYSPACE_X_MM : f32 = 2f32;
 const KEYSPACE_Y_MM : f32 = 2f32;
 
@@ -59,8 +59,8 @@ impl Container
 fn rows4<'a>() -> Vec<Vec<&'a str>>
 {
     let row0 = vec![ "Escape","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "BackSpace,1.3" ];//, r"\" ];
-    let row1 = vec![ "Tab,1.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":","],1,bracketright", "Return" ];
-    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
+    let row1 = vec![ "Tab,1.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return" ];
+    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash"];
     let row3 = vec![ "Control_L,1.6", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
 
     vec![row0, row1, row2, row3]
@@ -68,11 +68,16 @@ fn rows4<'a>() -> Vec<Vec<&'a str>>
 
 fn rowsnum<'a>() -> Vec<Vec<&'a str>>
 {
-    let rownum = vec![ "Escape", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-","^", r"\" ];
-    let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@","[" ];//, r"\" ];
-    let row1 = vec![ "__empty,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":" ];
-    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
-    let row3 = vec![ "Control_L,1.9", "__empty,3", "space,4", "__empty,2", "__reduce", "__close"];
+    let rownum = vec![ "Escape", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-,1,minus","^,1,asciicircum", r"\,1,yen" ,"BackSpace" ];
+    //let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@","[" ];//, r"\" ];
+    //let row1 = vec![ "__empty,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":" ];
+    //let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
+    //let row3 = vec![ "Control_L,1.9", "__empty,3", "space,4", "__empty,2", "__reduce", "__close"];
+
+    let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "Return,1.7" ];//, r"\" ];
+    let row1 = vec![ "Kanji,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return,1.4" ];
+    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash"];
+    let row3 = vec![ "Control_L,2.2", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
 
     vec![rownum, row0, row1, row2, row3]
 }
