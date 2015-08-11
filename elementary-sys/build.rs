@@ -27,6 +27,7 @@ fn build_elementary_key(include_paths: &[PathBuf]) {
     }
 
     config.file("src/elementary.c")
+        .file("src/keyboard.c")
         .compile("libelementary_key.a");
 }
 

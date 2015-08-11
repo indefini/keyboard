@@ -1,5 +1,6 @@
 #ifndef __keyboard__
 #define __keyboard__
+#include <Elementary.h>
 
 typedef struct _Keyboard Keyboard;
 
@@ -32,5 +33,6 @@ void keyboard_bg_add(
       void* cb_data);
 
 Eina_Bool is_point_inside(Evas_Object* o, int x, int y);
+Evas_Object* smart_keyboard_add(Evas *evas);
 
-#endif 
+#endif

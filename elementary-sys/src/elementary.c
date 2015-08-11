@@ -47,8 +47,8 @@ _rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUS
    //evas_object_show(indicator[0]);
 
    Eina_List* obs = evas_objects_at_xy_get(
-         e, 
-         //evas_object_evas_get(o), 
+         e,
+         //evas_object_evas_get(o),
          ev->canvas.x, ev->canvas.y, EINA_TRUE, EINA_FALSE);
 
    printf("mouse eina list count : %d \n", eina_list_count(obs));
@@ -89,8 +89,8 @@ _multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNU
    //evas_object_show(indicator[ev->device]);
 
    Eina_List* obs = evas_objects_at_xy_get(
-         //e, 
-         evas_object_evas_get(o), 
+         //e,
+         evas_object_evas_get(o),
          ev->canvas.x, ev->canvas.y, EINA_TRUE, EINA_TRUE);
 
    printf("eina list count : %d \n", eina_list_count(obs));
@@ -328,7 +328,7 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   //evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   //elm_win_resize_object_add(win, r);
-  
+
   evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   evas_object_size_hint_align_set(r, EVAS_HINT_FILL, EVAS_HINT_FILL);
   evas_object_color_set(r, 100, 200, 20, 255);
@@ -354,6 +354,10 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
   edje_object_part_swallow(edje, "rect", table);
 
 
+  //TODO
+  Evas_Object* smart = smart_keyboard_add(e);
+  evas_object_show(smart);
+
 
   Keyboard* k = calloc(1, sizeof *k);
   k->win = win;
@@ -372,7 +376,7 @@ static Evas_Object* _keyboard_add(Keyboard* keyboard, const char* keyname, int c
 
   evas_object_size_hint_min_set(bt, 30, 30);
   evas_object_show(bt);
-  
+
   return bt;
 }
 
@@ -402,7 +406,7 @@ Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col,
 
   //evas_object_layer_set(bt, 10);
   //evas_object_raise(bt);
-  
+
   evas_object_color_set(bt, 80, 80, 80, 255);
 
 
@@ -563,7 +567,7 @@ is_point_inside(Evas_Object* o, int x, int y)
   int ox, oy, ow, oh;
   evas_object_geometry_get(o, &ox, &oy, &ow, &oh);
 
-  return 
+  return
    x >= ox && x <= ox + ow &&
    y >= oy && y <= oy + oh;
 }
