@@ -8,15 +8,16 @@ use std::ffi::CString;
 use libc::{c_char, c_void, c_int};
 use std::mem;
 
-const KEY_X_MM : f32 = 15f32;
-const KEY_Y_MM : f32 = 15f32;
+const KEY_X_MM : f32 = 17f32;
+const KEY_Y_MM : f32 = 17f32;
 const KEYSPACE_X_MM : f32 = 2f32;
 const KEYSPACE_Y_MM : f32 = 2f32;
 
 pub enum KeyKind
 {
     Normal(String),
-    Func(elm::RustCb)
+    Func(elm::RustCb),
+    //Modifier(String)
 }
 
 pub struct Key
@@ -39,14 +40,27 @@ pub struct Touch
 pub struct Container
 {
     keys : Vec<Vec<Key>>,
-    touch : [Touch;10]
+    touch : [Touch;10],
+    shift : bool
 }
+
+/*
+impl Container
+{
+    fn handle_normal_key(&mut self, s : &str)
+    {
+        unsafe {
+            elm::ecore_x_test_fake_key_press(cstring_new(s));
+        }
+    }
+}
+*/
 
 fn rows4<'a>() -> Vec<Vec<&'a str>>
 {
     let row0 = vec![ "Escape","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "BackSpace,1.3" ];//, r"\" ];
-    let row1 = vec![ "Tab,1.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":","],1,bracketright", "Return" ];
-    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
+    let row1 = vec![ "Tab,1.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return" ];
+    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash"];
     let row3 = vec![ "Control_L,1.6", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
 
     vec![row0, row1, row2, row3]
@@ -54,15 +68,19 @@ fn rows4<'a>() -> Vec<Vec<&'a str>>
 
 fn rowsnum<'a>() -> Vec<Vec<&'a str>>
 {
-    let rownum = vec![ "Escape", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-","^", r"\" ];
-    let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@","[" ];//, r"\" ];
-    let row1 = vec![ "__empty,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":" ];
-    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
-    let row3 = vec![ "Control_L,1.9", "__empty,3", "space,4", "__empty,2", "__reduce", "__close"];
+    let rownum = vec![ "Escape", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-,1,minus","^,1,asciicircum", r"\,1,yen" ,"BackSpace" ];
+    //let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@","[" ];//, r"\" ];
+    //let row1 = vec![ "__empty,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", ":" ];
+    //let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "<", ">", "?", r"\"];
+    //let row3 = vec![ "Control_L,1.9", "__empty,3", "space,4", "__empty,2", "__reduce", "__close"];
+
+    let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "Return,1.7" ];//, r"\" ];
+    let row1 = vec![ "Kanji,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return,1.4" ];
+    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash"];
+    let row3 = vec![ "Control_L,2.2", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
 
     vec![rownum, row0, row1, row2, row3]
 }
-
 
 fn main() {
     unsafe { elm::init() };
@@ -72,7 +90,8 @@ fn main() {
 
     let mut container = Container {
         keys : Vec::new(),
-        touch : [Touch {x:0, y:0, down:false}; 10]
+        touch : [Touch {x:0, y:0, down:false}; 10],
+        shift : false
     };
 
     create_keyboard_with_rects(&rows, &mut container);
@@ -84,7 +103,7 @@ fn main() {
     }
 }
 
-fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>) 
+fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>)
     -> (usize, usize, usize, usize, usize, usize)
 {
     let mut max_col = 0f32;
@@ -170,14 +189,14 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
             }
             else if c.starts_with("__reduce") {
                 /*
-                unsafe { 
+                unsafe {
                     elm::keyboard_fn_add(
                         k,
                         cstring_new(&c[2..]),
                         close,
                         ptr::null(),
                         pos as i32,
-                        row, 
+                        row,
                         width as i32,
                         1);
                 }
@@ -192,7 +211,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
 
                 let key = Key {
                     eo : r,
-                    name : String::from(s[0]), 
+                    name : String::from(s[0]),
                     kind : KeyKind::Func(reduce),
                     down : false,
                     device : 0
@@ -210,7 +229,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
 
                 let key = Key {
                     eo : r,
-                    name : String::from(s[0]), 
+                    name : String::from(s[0]),
                     kind : KeyKind::Func(close),
                     down : false,
                     device : 0
@@ -218,7 +237,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                 col_keys.push(key);
             }
             else {
-                unsafe { 
+                unsafe {
                     /*
                     elm::keyboard_add(
                         k,
@@ -238,7 +257,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
 
                     let key = Key {
                         eo : r,
-                        name : String::from(s[0]), 
+                        name : String::from(s[0]),
                         kind : KeyKind::Normal(String::from(realkey)),
                         down : false,
                         device : 0
@@ -302,9 +321,19 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.kind {
                     KeyKind::Normal(ref s) => {
-                        unsafe {
-                            elm::ecore_x_test_fake_key_press(cstring_new(s));
+                        //con.handle_normal_key(s);
+                        if s == "Shift_L" && !con.shift {
+                            con.shift = true;
+                            unsafe {
+                             elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
                         }
+                        else {
+                            unsafe {
+                             elm::ecore_x_test_fake_key_press(cstring_new(s));
+                            }
+                        }
+
                     },
                     KeyKind::Func(ref cb) => {
                         unsafe {
@@ -326,6 +355,12 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
     for c in con.keys.iter_mut() {
         for k in c.iter_mut() {
             if k.down && unsafe {elm::is_point_inside(k.eo, x, y)} {
+                if k.name == "Shift_L" {
+                     con.shift = false;
+                    unsafe {
+                     elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+                     }
+                }
                 k.down = false;
                 //println!("found object {} ", k.name);
                 unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
@@ -348,6 +383,12 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     k.down = false;
                     //println!("found object {} ", k.name);
                     unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
+                    if k.name == "Shift_L" {
+                         con.shift = false;
+                        unsafe {
+                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+                        }
+                    }
                 }
             }
             else if unsafe {elm::is_point_inside(k.eo, x, y)} {
@@ -356,10 +397,18 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.kind {
                     KeyKind::Normal(ref s) => {
+                        if s == "Shift_L" && !con.shift {
+                            con.shift = true;
+                            unsafe {
+                             elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
+                        }
+                        else {
                         unsafe {
                             elm::ecore_x_test_fake_key_press(cstring_new(s));
                         }
-                        
+                        }
+
                     },
                     KeyKind::Func(ref cb) => {
                         unsafe {

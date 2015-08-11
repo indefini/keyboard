@@ -4,10 +4,10 @@ collections {
    }
    group { name: "main";
       min : 50 20;
-      max: 2721 700;
+      max: 721 700;
       parts {
          part { name: "rect";
-            
+
             type: SWALLOW;
              description { state: "default" 0.0;
                rel1.relative: 0.0 0.0;
@@ -18,7 +18,7 @@ collections {
                /*color: 223 136 170 255;*/
             }
          }
-         
+
       }
 /*
       programs {

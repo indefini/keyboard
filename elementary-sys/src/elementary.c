@@ -253,7 +253,8 @@ Evas_Object* edje_test(Evas* e, int width, int height)
 
 Evas_Object* window_new()
 {
-  Evas_Object* win = elm_win_util_standard_add("keyboard", "keyboard");
+  //Evas_Object* win = elm_win_util_standard_add("keyboard", "keyboard");
+  Evas_Object* win = elm_win_add(NULL, "keyboard", ELM_WIN_DOCK);
   evas_object_name_set(win, strdup("win"));
   _win = win;
   elm_win_autodel_set(win, EINA_TRUE);
@@ -303,7 +304,8 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
   //printf("screen dpx, dpy : %d, %d \n", dpx, dpy);
 
   Evas_Object* table = table_new(win);
-  //elm_table_padding_set(table, 4, 4);
+  if (ksx > 4) ksx = 4;
+  if (ksy > 4) ksy = 4;
   elm_table_padding_set(table, ksx, ksy);
 
   //chris
@@ -341,7 +343,7 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   Evas* e = evas_object_evas_get(win);
   Evas_Object* edje = edje_test(e, px, py);
-  edje_edit_group_max_w_set(edje, 721);
+  //edje_edit_group_max_w_set(edje, 721);
   //edje_edit_group_max_h_set(edje, py);
 
   Evas_Object* stack = _create_stack(e);
@@ -412,8 +414,8 @@ Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col,
 
   int dpx, dpy;
   elm_win_screen_dpi_get(keyboard->win, &dpx, &dpy);
-  //evas_object_size_hint_min_set(bt, mm_to_px(5, dpx) , mm_to_px(5, dpy));
-  //evas_object_size_hint_max_set(bt, mm_to_px(15, dpx) , mm_to_px(15, dpy));
+  evas_object_size_hint_min_set(bt, mm_to_px(5, dpx) , mm_to_px(5, dpy));
+  //evas_object_size_hint_max_set(bt, mm_to_px(5, dpx) , mm_to_px(5, dpy));
   evas_object_show(bt);
 
   Evas_Object* t = evas_object_text_add(e);
