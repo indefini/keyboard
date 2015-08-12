@@ -17,7 +17,12 @@ struct _Smart_Keyboard
 {
    Evas_Object_Smart_Clipped_Data base;
    Evas_Object *children[2], *border;
-   int child_count;
+
+   unsigned int key_width_mm;
+   unsigned int key_height_mm;
+
+   unsigned int key_space_x_mm;
+   unsigned int key_space_y_mm;
 };
 
 EVAS_SMART_SUBCLASS_NEW("Smart_Keyboard", _smart_keyboard,
@@ -34,14 +39,28 @@ _smart_keyboard_add(Evas_Object *o)
     * clipped to it */
    _smart_keyboard_parent_sc->add(o);
 
+   Evas* e = evas_object_evas_get(o);
+
    /* this is a border around the smart object's area, delimiting it */
-   priv->border = evas_object_image_filled_add(evas_object_evas_get(o));
-   //evas_object_image_file_set(priv->border, border_img_path, NULL);
+   priv->border = evas_object_image_filled_add(e);
+   evas_object_image_file_set(priv->border, "red.png", NULL);
    evas_object_image_border_set(priv->border, 3, 3, 3, 3);
    evas_object_image_border_center_fill_set(
      priv->border, EVAS_BORDER_FILL_NONE);
    evas_object_show(priv->border);
    evas_object_smart_member_add(priv->border, o);
+
+   Evas_Object *rect = evas_object_rectangle_add(e);
+   evas_object_color_set(rect, rand() % 255, rand() % 255, rand() % 255, 255);
+   evas_object_show(rect);
+   priv->children[0] = rect;
+   evas_object_smart_member_add(rect, o);
+
+   rect = evas_object_rectangle_add(e);
+   evas_object_color_set(rect, rand() % 255, rand() % 255, rand() % 255, 255);
+   evas_object_show(rect);
+   priv->children[1] = rect;
+   evas_object_smart_member_add(rect, o);
 }
 
 static void
@@ -71,6 +90,7 @@ _smart_keyboard_resize(Evas_Object *o,
 {
    Evas_Coord ow, oh;
    evas_object_geometry_get(o, NULL, NULL, &ow, &oh);
+   printf("resize to %d, %d \n", ow, oh);
    if ((ow == w) && (oh == h)) return;
 
    /* this will trigger recalculation */
@@ -87,19 +107,27 @@ _smart_keyboard_calculate(Evas_Object *o)
 
    evas_object_geometry_get(o, &x, &y, &w, &h);
 
+   printf("recalculate to %d, %d, %d, %d \n", x, y, w, h);
+
    evas_object_resize(priv->border, w, h);
    evas_object_move(priv->border, x, y);
 
+   int px = 10;
+   int py = 10;
+
+   int mx = 4;
+   int my = 4;
+
    if (priv->children[0])
      {
-        evas_object_move(priv->children[0], x + 3, y + 3);
-        evas_object_resize(priv->children[0], (w / 2) - 3, (h / 2) - 3);
+        evas_object_move(priv->children[0], x + px, y + py);
+        evas_object_resize(priv->children[0], (w / 2) - px -mx, (h / 2) - py -my);
      }
 
    if (priv->children[1])
      {
-        evas_object_move(priv->children[1], x + (w / 2), y + (h / 2));
-        evas_object_resize(priv->children[1], (w / 2) - 3, (h / 2) - 3);
+        evas_object_move(priv->children[1], x + (w / 2) + mx, y + (h / 2) + my);
+        evas_object_resize(priv->children[1], (w / 2) - px - mx, (h / 2) - px -my);
      }
 }
 
@@ -125,6 +153,26 @@ smart_keyboard_add(Evas *evas)
 {
    return evas_object_smart_add(evas, _smart_keyboard_smart_class_new());
 }
+
+void
+smart_keyboard_keys_padding_set(Evas_Object *keyboard)
+{
+	//TODO
+}
+
+void
+smart_keyboard_key_add(
+		Evas_Object *keyboard,
+		const char* keyname,
+		int col,
+		int row,
+		float width,
+		float height)
+{
+	//TODO
+}
+
+
 
 
 

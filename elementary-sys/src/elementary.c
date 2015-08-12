@@ -139,7 +139,7 @@ Evas_Object* table_new(Evas_Object* win)
   //elm_table_padding_set(tb, 14, 14);
   //elm_table_align_set(tb, EVAS_HINT_FILL, EVAS_HINT_FILL);
   //elm_table_align_set(tb, 0, 0);
-  evas_object_show(tb);
+  //evas_object_show(tb);
 
   return tb;
 }
@@ -353,11 +353,11 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   elm_win_resize_object_add(win, stack);
 
-  edje_object_part_swallow(edje, "rect", table);
-
+  //edje_object_part_swallow(edje, "rect", table);
 
   //TODO
   Evas_Object* smart = smart_keyboard_add(e);
+  edje_object_part_swallow(edje, "rect", smart);
   evas_object_show(smart);
 
 
