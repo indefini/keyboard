@@ -357,6 +357,11 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   //TODO
   Evas_Object* smart = smart_keyboard_add(e);
+  smart_keyboard_key_add(smart, "keyname", 0, 20, 20);
+  smart_keyboard_key_add(smart, "keyname", 0, 20, 20);
+  smart_keyboard_key_add(smart, "keyname", 1, 20, 20);
+  smart_keyboard_key_add(smart, "keyname", 1, 20, 20);
+  smart_keyboard_key_add(smart, "keyname", 1, 20, 20);
   edje_object_part_swallow(edje, "rect", smart);
   evas_object_show(smart);
 
