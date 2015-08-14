@@ -34,5 +34,24 @@ void keyboard_bg_add(
 
 Eina_Bool is_point_inside(Evas_Object* o, int x, int y);
 Evas_Object* smart_keyboard_add(Evas *evas);
+Evas_Object* smart_keyboard_key_add(
+		Evas_Object *keyboard,
+		const char* keyname,
+		int row,
+		float wf,
+		float hf);
+void smart_keyboard_key_max_set(
+		Evas_Object *keyboard,
+		Evas_Coord x, Evas_Coord y);
+
+void smart_keyboard_key_space_set(
+		Evas_Object *keyboard,
+		Evas_Coord minx, Evas_Coord miny,
+		Evas_Coord maxx, Evas_Coord maxy);
+
+void smart_keyboard_padding_set(
+		Evas_Object *keyboard,
+		Evas_Coord x, Evas_Coord y);
+
 
 #endif

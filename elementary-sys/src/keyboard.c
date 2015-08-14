@@ -1,6 +1,24 @@
 #include "keyboard.h"
 #include "Evas.h"
 
+typedef struct _Key Key;
+struct _Key
+{
+	float width_factor;
+	Evas_Object* object;
+	Evas_Object* text;
+};
+
+Key* key_new(float width_factor, Evas_Object* o, Evas_Object* txt)
+{
+	Key* k = calloc(1, sizeof *k);
+	k->width_factor = width_factor;
+	k->object = o;
+	k->text = txt;
+
+	return k;
+}
+
 static const Evas_Smart_Cb_Description _smart_callbacks[] =
 {
    {"christest", "i"},
@@ -27,8 +45,54 @@ struct _Smart_Keyboard
    unsigned int key_space_maxx;
    unsigned int key_space_maxy;
 
+   unsigned int paddingx;
+   unsigned int paddingy;
+
    Eina_Array* rows;
 };
+
+static float get_ideal_height(Smart_Keyboard* k)
+{
+	int count =  eina_array_count(k->rows);
+	return count * k->key_height + (count -1) * k->key_space_maxy;
+}
+
+static float get_ideal_width(Smart_Keyboard* k)
+{
+   Eina_Array *row;
+   Eina_Array_Iterator iterator;
+   unsigned int i;
+   float maxx = 0;
+
+   EINA_ARRAY_ITER_NEXT(k->rows, i, row, iterator) {
+
+   		Key* col;
+   		Eina_Array_Iterator iterator_col;
+   		unsigned int j;
+		float row_width = 0;
+
+   		EINA_ARRAY_ITER_NEXT(row, j, col, iterator_col) {
+			row_width += k->key_width*col->width_factor + k->key_space_maxx ;
+		}
+
+		row_width -= k->key_space_maxx;
+
+		if (row_width > maxx) {
+			maxx = row_width;
+		}
+   }
+
+   return maxx;
+
+   /*
+   if (maxx <= width) {
+	   // use max key and max space
+   }
+   else {
+	   float ratio = width / maxx;
+   }
+   */
+}
 
 EVAS_SMART_SUBCLASS_NEW("Smart_Keyboard", _smart_keyboard,
                         Evas_Smart_Class, Evas_Smart_Class,
@@ -69,7 +133,7 @@ _smart_keyboard_add(Evas_Object *o)
    evas_object_smart_member_add(rect, o);
    */
 
-   priv->rows = eina_array_new(4);
+   priv->rows = eina_array_new(6);
 }
 
 static void
@@ -121,13 +185,13 @@ _smart_keyboard_calculate(Evas_Object *o)
    evas_object_resize(priv->border, w, h);
    evas_object_move(priv->border, x, y);
 
-   int pxo = 10;
-   int pyo = 10;
+   int pxo = priv->paddingx;
+   int pyo = priv->paddingy;;
    int px = pxo;
    int py = pyo;
 
-   int mx = 4;
-   int my = 4;
+   int mx = priv->key_space_maxx;
+   int my = priv->key_space_maxy;
 
    if (priv->children[0])
      {
@@ -141,8 +205,28 @@ _smart_keyboard_calculate(Evas_Object *o)
         evas_object_resize(priv->children[1], (w / 2) - px - mx, (h / 2) - px -my);
      }
 
-   int width = 20;
-   int height = 15;
+   float ix = get_ideal_width(priv);
+   float iy = get_ideal_height(priv);
+
+   float width = 20.0f;
+   float height = 15.0f;
+
+   if (w > 2* priv->paddingx) {
+   	w -= 2* priv->paddingx;
+   }
+
+   printf("w is : %d \n", w);
+
+   if (ix <= w) {
+	   width = priv->key_width;
+	   mx = priv->key_space_maxx;
+   }
+   else {
+	   float ratio = ((float)w)/ix;
+	   printf("ratio : %f \n", ratio);
+	   width = priv->key_width * ratio;
+	   mx = priv->key_space_maxx * ratio;
+   }
 
    Eina_Array *row;
    Eina_Array_Iterator iterator;
@@ -150,15 +234,18 @@ _smart_keyboard_calculate(Evas_Object *o)
 
    EINA_ARRAY_ITER_NEXT(priv->rows, i, row, iterator) {
 
-   		Evas_Object *col;
+   		Key* col;
    		Eina_Array_Iterator iterator_col;
    		unsigned int j;
 		px = pxo;
    		EINA_ARRAY_ITER_NEXT(row, j, col, iterator_col) {
-        	evas_object_move(col, x + px, y + py);
-        	evas_object_resize(col, width, height);
-			px += width + mx;
+        	evas_object_move(col->text, x + px, y + py);
+        	evas_object_move(col->object, x + px, y + py);
+			int ww = width* col->width_factor + 0.5f;
+        	evas_object_resize(col->object, ww, height);
+			px += ww + mx;
 		}
+		printf("px after row is : %d \n", px);
 		py += height + my;
    }
 }
@@ -197,8 +284,8 @@ smart_keyboard_key_add(
 		Evas_Object *keyboard,
 		const char* keyname,
 		int row,
-		float width,
-		float height)
+		float wf,
+		float hf)
 {
 	//TODO
   Smart_Keyboard* priv = evas_object_smart_data_get(keyboard);
@@ -214,8 +301,19 @@ smart_keyboard_key_add(
   Evas_Object *rect = evas_object_rectangle_add(e);
   evas_object_color_set(rect, rand() % 255, rand() % 255, rand() % 255, 255);
   evas_object_show(rect);
-  eina_array_push(row_cur, rect);
   evas_object_smart_member_add(rect, keyboard);
+
+  Evas_Object* t = evas_object_text_add(e);
+  evas_object_text_style_set(t, EVAS_TEXT_STYLE_PLAIN);
+  evas_object_color_set(t, 200, 200, 200, 255);
+  evas_object_text_font_set(t, "Ubuntu", 10);
+  evas_object_text_text_set(t, keyname);
+  evas_object_raise(t);
+  evas_object_show(t);
+
+  Key* k = key_new(wf, rect, t);
+
+  eina_array_push(row_cur, k);
 
   return rect;
 }
@@ -233,6 +331,20 @@ void smart_keyboard_key_max_set(
   	evas_object_smart_changed(keyboard);
   }
 }
+
+void smart_keyboard_padding_set(
+		Evas_Object *keyboard,
+		Evas_Coord x, Evas_Coord y)
+{
+  Smart_Keyboard* priv = evas_object_smart_data_get(keyboard);
+
+  if (x != priv->paddingx || y != priv->paddingy) {
+  	priv->paddingx = x;
+  	priv->paddingy = y;
+  	evas_object_smart_changed(keyboard);
+  }
+}
+
 
 void smart_keyboard_key_space_set(
 		Evas_Object *keyboard,
