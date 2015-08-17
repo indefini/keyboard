@@ -48,6 +48,9 @@ struct _Smart_Keyboard
    unsigned int paddingx;
    unsigned int paddingy;
 
+   unsigned int ideal_width;
+   unsigned int ideal_index;
+
    Eina_Array* rows;
 };
 
@@ -205,7 +208,8 @@ _smart_keyboard_calculate(Evas_Object *o)
         evas_object_resize(priv->children[1], (w / 2) - px - mx, (h / 2) - px -my);
      }
 
-   float ix = get_ideal_width(priv);
+   //float ix = get_ideal_width(priv);
+   float ix = priv->ideal_width;
    float iy = get_ideal_height(priv);
 
    float width = 20.0f;
@@ -227,6 +231,23 @@ _smart_keyboard_calculate(Evas_Object *o)
 	   width = priv->key_width * ratio;
 	   mx = priv->key_space_maxx * ratio;
    }
+
+
+   		Key* col;
+   		Eina_Array_Iterator iterator_col;
+   		unsigned int j;
+        unsigned int test = 0;
+   		Eina_Array* longrow = eina_array_data_get(priv->rows,priv->ideal_index);
+   		EINA_ARRAY_ITER_NEXT(longrow, j, col, iterator_col) {
+			int ww = width* col->width_factor + 0.5f;
+			test += ww + mx;
+		}
+        test -= mx;
+
+    pxo = priv->paddingx + (w - test)/2;
+
+
+
 
    Eina_Array *row;
    Eina_Array_Iterator iterator;
@@ -314,6 +335,21 @@ smart_keyboard_key_add(
   Key* k = key_new(wf, rect, t);
 
   eina_array_push(row_cur, k);
+
+   Key *key;
+   Eina_Array_Iterator iterator;
+   unsigned int i;
+
+   unsigned int roww = 0;
+   EINA_ARRAY_ITER_NEXT(row_cur, i, key, iterator) {
+       roww += key->width_factor*priv->key_width + priv->key_space_maxx;;
+   }
+   roww -= priv->key_space_maxx;
+
+   if (roww > priv->ideal_width){
+       priv->ideal_width = roww;
+       priv->ideal_index = row;
+   }
 
   return rect;
 }
