@@ -357,9 +357,9 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   //TODO
   Evas_Object* smart = smart_keyboard_add(e);
-  smart_keyboard_key_max_set(smart, 300, 300);
-  smart_keyboard_key_space_set(smart, 0, 0, 5, 5);
-  smart_keyboard_padding_set(smart, 0, 0);
+  smart_keyboard_key_max_set(smart, 300, 50);
+  smart_keyboard_key_space_set(smart, 4, 2, 5, 5);
+  smart_keyboard_padding_set(smart, 0, 2);
 
   smart_keyboard_key_add(smart, "Tab", 0, 1.3f, 1.f);
   smart_keyboard_key_add(smart, "q", 0, 1.f, 1.f);
