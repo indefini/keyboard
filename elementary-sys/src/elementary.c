@@ -2,7 +2,7 @@
 #include "keyboard.h"
 
 Evas_Object* _win;
-Evas_Object* _table;
+//Evas_Object* _table;
 Eina_List* _btns = NULL;
 
 void init()
@@ -29,6 +29,7 @@ void reduce()
   elm_win_iconified_set(_win, EINA_TRUE);
 }
 
+/*
 static void
 _rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
 {
@@ -69,6 +70,7 @@ _rect_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUS
    }
 
 }
+*/
 
 static void
 _multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNUSED, void *event_info)
@@ -125,6 +127,7 @@ _multi_down(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EINA_UNU
 
 
 
+/*
 Evas_Object* table_new(Evas_Object* win)
 {
   Evas_Object* tb = elm_table_add(win);
@@ -143,6 +146,7 @@ Evas_Object* table_new(Evas_Object* win)
 
   return tb;
 }
+*/
 
 static void
 _window_del(void *data, Evas_Object *obj, void *event_info)
@@ -286,9 +290,6 @@ Evas_Object* window_new()
 
 Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx, int ksy)
 {
-  //Evas_Object* win = window_new();
-  //int dpx, dpy;
-  //elm_win_screen_dpi_get(win, &dpx, &dpy);
   int x, y, w, h;
   elm_win_screen_size_get(win, &x, &y, &w, &h);
   //printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
@@ -300,46 +301,7 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
   //test size
   //evas_object_resize(win, 206, 156);
 
-
   //printf("screen dpx, dpy : %d, %d \n", dpx, dpy);
-
-  Evas_Object* table = table_new(win);
-  if (ksx > 4) ksx = 4;
-  if (ksy > 4) ksy = 4;
-  elm_table_padding_set(table, ksx, ksy);
-
-  //chris
-  /*
-  Evas* e = evas_object_evas_get(win);
-  Evas_Object*box = evas_object_box_add(e);
-  evas_object_resize(box, 1900, 200);
-  evas_object_size_hint_min_set(box, 25, 37);
-  evas_object_size_hint_max_set(box, 500, 200);
-  evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-  evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
-  evas_object_size_hint_aspect_set(box, EVAS_ASPECT_CONTROL_BOTH, 1, 1);
-  //elm_win_resize_object_add(win, box);
-
-  evas_object_show(box);
-  */
-  /*
-  Evas_Object* r = evas_object_rectangle_add(e);
-  evas_object_resize(r, 50, 75);
-  evas_object_size_hint_min_set(r, 25, 37);
-  evas_object_size_hint_max_set(r, 500, 750);
-
-  //evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-  //elm_win_resize_object_add(win, r);
-
-  evas_object_size_hint_weight_set(r, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-  evas_object_size_hint_align_set(r, EVAS_HINT_FILL, EVAS_HINT_FILL);
-  evas_object_color_set(r, 100, 200, 20, 255);
-  evas_object_show(r);
-  */
-  //evas_object_box_append(box, table);
-
-  //elm_win_resize_object_add(win, table);
-
 
   Evas* e = evas_object_evas_get(win);
   Evas_Object* edje = edje_test(e, px, py);
@@ -353,14 +315,13 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   elm_win_resize_object_add(win, stack);
 
-  //edje_object_part_swallow(edje, "rect", table);
-
   //TODO
   Evas_Object* smart = smart_keyboard_add(e);
   smart_keyboard_key_max_set(smart, 300, 50);
   smart_keyboard_key_space_set(smart, 4, 2, 5, 5);
   smart_keyboard_padding_set(smart, 0, 2);
 
+  /*
   smart_keyboard_key_add(smart, "Tab", 0, 1.3f, 1.f);
   smart_keyboard_key_add(smart, "q", 0, 1.f, 1.f);
   smart_keyboard_key_add(smart, "w", 0, 1.f, 1.f);
@@ -384,6 +345,7 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
   smart_keyboard_key_add(smart, "k", 1, 1.f, 1.f);
   smart_keyboard_key_add(smart, "l", 1, 1.f, 1.f);
   //smart_keyboard_key_add(smart, ";", 1, 1.f, 1.f);
+  */
 
   edje_object_part_swallow(edje, "rect", smart);
   evas_object_show(smart);
@@ -391,13 +353,14 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   Keyboard* k = calloc(1, sizeof *k);
   k->win = win;
-  k->table = table;
+  k->smart = smart;
 
   return k;
 }
 
 static Evas_Object* _keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
 {
+  /*
   Evas_Object* bt = elm_button_add(keyboard->win);
   elm_object_text_set(bt, keyname);
   evas_object_size_hint_weight_set(bt, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
@@ -406,12 +369,17 @@ static Evas_Object* _keyboard_add(Keyboard* keyboard, const char* keyname, int c
 
   evas_object_size_hint_min_set(bt, 30, 30);
   evas_object_show(bt);
-
   return bt;
+  */
+
+  Evas_Object* key = smart_keyboard_key_add(keyboard->smart, keyname , row, 1.f, 1.f);
+
+  return key;
 }
 
 void keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
 {
+
   Evas_Object* bt = _keyboard_add(keyboard, keyname, col, row, width, height);
   evas_object_smart_callback_add(bt, "pressed", _on_pressed, NULL);
   //evas_object_event_callback_add(bt, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
@@ -423,7 +391,8 @@ int mm_to_px(float mm, int dpi)
     return (int) f;
 }
 
-Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
+/*
+Evas_Object* cacakeyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
 {
   Evas* e = evas_object_evas_get(keyboard->win);
 
@@ -460,14 +429,13 @@ Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col,
   //evas_object_size_hint_max_set(t, mm_to_px(15, dpx) , mm_to_px(15, dpy));
   evas_object_show(t);
 
-  /*
-  int size;
-  const char *font;
-  evas_object_text_font_get(t, &font, &size);
-  fprintf(stdout, "Adding text object with font %s, size %d\n", font, size);
-  */
-
   return bt;
+}
+*/
+
+Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
+{
+  return smart_keyboard_key_add(keyboard->smart, keyname, row, 1.f, 1.f);
 }
 
 

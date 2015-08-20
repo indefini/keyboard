@@ -7,7 +7,7 @@ typedef struct _Keyboard Keyboard;
 struct _Keyboard
 {
   Evas_Object* win;
-  Evas_Object* table;
+  Evas_Object* smart;
 };
 
 typedef void (rust_cb)(void* data);
