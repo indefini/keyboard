@@ -350,7 +350,8 @@ smart_keyboard_key_add(
   Evas* e = evas_object_evas_get(keyboard);
 
   Evas_Object *rect = evas_object_rectangle_add(e);
-  evas_object_color_set(rect, rand() % 255, rand() % 255, rand() % 255, 255);
+  //evas_object_color_set(rect, rand() % 255, rand() % 255, rand() % 255, 255);
+  evas_object_color_set(rect, 80, 80, 80, 255);
   evas_object_show(rect);
   evas_object_smart_member_add(rect, keyboard);
 

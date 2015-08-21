@@ -433,9 +433,12 @@ Evas_Object* cacakeyboard_rect_add(Keyboard* keyboard, const char* keyname, int 
 }
 */
 
-Evas_Object* keyboard_rect_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
+Evas_Object* keyboard_rect_add(
+		Keyboard* keyboard,
+		const char* keyname,
+		int row, float width)
 {
-  return smart_keyboard_key_add(keyboard->smart, keyname, row, 1.f, 1.f);
+  return smart_keyboard_key_add(keyboard->smart, keyname, row, width, 1.f);
 }
 
 

@@ -152,20 +152,13 @@ fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container
 
 fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut Container)
 {
-    let width = 10f32;
-
     let mut row = 0;
     for r in rows.iter() {
-
-        let mut col = 0f32;
-        //let first_pos = (max_col*width - width*get_real_len(r))/2f32;
-        let first_pos = 0f32;// (max_col*width - width*get_real_len(r))/2f32;
 
         let mut col_keys = Vec::new();
 
         for c in (*r).iter() {
 
-            let pos = first_pos + col*width;
             let s : Vec<&str> = c.split(',').collect();
 
             let w = if s.len() > 1 {
@@ -204,10 +197,8 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                 let r = unsafe {elm::keyboard_rect_add(
                     k,
                     cstring_new(&c[2..]),
-                    pos as i32,
                     row,
-                    (width *w) as i32,
-                    1)};
+                    w)};
 
                 let key = Key {
                     eo : r,
@@ -222,10 +213,8 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                 let r = unsafe {elm::keyboard_rect_add(
                     k,
                     cstring_new(&c[2..]),
-                    pos as i32,
                     row,
-                    (width *w) as i32,
-                    1)};
+                    w)};
 
                 let key = Key {
                     eo : r,
@@ -250,10 +239,8 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                     let r = elm::keyboard_rect_add(
                         k,
                         cstring_new(s[0]),
-                        pos as i32,
                         row,
-                        (width *w + 0.5f32) as i32,
-                        1);
+                        w);
 
                     let key = Key {
                         eo : r,
@@ -265,7 +252,6 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                     col_keys.push(key);
                 }
             }
-            col = col +w;
         }
         row = row + 1;
         container.keys.push(col_keys);

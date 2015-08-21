@@ -1,6 +1,6 @@
 extern crate libc;
 
-use libc::{c_void, c_int, c_char};//, c_ulong, c_long, c_uint, c_uchar, size_t};
+use libc::{c_void, c_int, c_char, c_float};//, c_ulong, c_long, c_uint, c_uchar, size_t};
 
 pub type RustCb = extern fn(data : *mut c_void);
 pub type PressedCb = extern fn(data : *mut c_void, device : c_int, x : c_int, y : c_int);
@@ -39,10 +39,8 @@ extern "C" {
     pub fn keyboard_rect_add(
         keyboard : *const Keyboard,
         keyname : *const c_char,
-        col : c_int,
         row : c_int,
-        width : c_int,
-        height : c_int) -> *mut Evas_Object;
+        width : c_float) -> *mut Evas_Object;
 
     pub fn keyboard_fn_add(
         keyboard : *const Keyboard,
