@@ -50,7 +50,8 @@ struct _Smart_Keyboard
 
    unsigned int ideal_width;
    unsigned int ideal_index;
-   float ideal_factor_width;;
+   float ideal_factor_width;
+   int more;
 
    Eina_Array* rows;
 };
@@ -214,7 +215,8 @@ _smart_keyboard_calculate(Evas_Object *o)
    float ix = priv->ideal_width;
    float iy = get_ideal_height(priv);
 
-   float width = 20.0f;
+   //float width = 20.0f;
+   int width = 20;
    float height = 15.0f;
 
    if (w > 2* priv->paddingx) {
@@ -237,9 +239,10 @@ _smart_keyboard_calculate(Evas_Object *o)
 	   	printf("minx is  : %d, %d \n", priv->key_space_minx, mx);
 	   }
 	   int keys_count = eina_array_count(longrow);
-	   int left_for_keys = w - (keys_count -1) * mx;
+	   int left_for_keys = w - (priv->more + keys_count -1) * mx;
 	   //float yop = (float) left_for_keys/ (float)keys_count*priv->ideal_factor_width;
-	   width = ((float) left_for_keys)/priv->ideal_factor_width;
+	   //width = ((float) left_for_keys)/priv->ideal_factor_width;
+	   width = left_for_keys/priv->ideal_factor_width;
    }
 
    if (iy <= h) {
@@ -288,10 +291,26 @@ _smart_keyboard_calculate(Evas_Object *o)
    		unsigned int j;
 		px = pxo;
    		EINA_ARRAY_ITER_NEXT(row, j, col, iterator_col) {
+            if (col->text) {
         	evas_object_move(col->text, x + px, y + py);
+            }
+            int more_space = ((int) col->width_factor) -1;
+            //int more_space = 0;
+            if (col->width_factor - ((int) col->width_factor)  > 0) {
+                more_space += 1;
+            }
+            //if (j== 0 || more_space < 0) {
+            if (more_space < 0) {
+                more_space = 0;
+            }
+            printf("more space for %f, %d ¥n", col->width_factor, more_space);
+
+			//int ww = width* col->width_factor + ( ((int) col->width_factor) -1)*mx;;
+			int ww = width* col->width_factor + more_space*mx;
+            if (col->object) {
         	evas_object_move(col->object, x + px, y + py);
-			int ww = width* col->width_factor;// + 0.5f;
         	evas_object_resize(col->object, ww, height);
+            }
 
 			printf("%d,,,px before : %d \n", j, px);
 			px += ww + (int) mx;
@@ -349,7 +368,10 @@ smart_keyboard_key_add(
 
   Evas* e = evas_object_evas_get(keyboard);
 
-  Evas_Object *rect = evas_object_rectangle_add(e);
+  Evas_Object *rect = NULL;
+
+  if (strcmp(keyname, "__empty")) {
+  rect = evas_object_rectangle_add(e);
   //evas_object_color_set(rect, rand() % 255, rand() % 255, rand() % 255, 255);
   evas_object_color_set(rect, 80, 80, 80, 255);
   evas_object_show(rect);
@@ -366,6 +388,12 @@ smart_keyboard_key_add(
   Key* k = key_new(wf, rect, t);
 
   eina_array_push(row_cur, k);
+  }
+  else {
+  Key* k = key_new(wf, NULL, NULL);
+
+  eina_array_push(row_cur, k);
+  }
 
    Key *key;
    Eina_Array_Iterator iterator;
@@ -373,16 +401,34 @@ smart_keyboard_key_add(
 
    unsigned int roww = 0;
    float f = 0;
+   int more = 0;
    EINA_ARRAY_ITER_NEXT(row_cur, i, key, iterator) {
-       roww += key->width_factor*priv->key_width + priv->key_space_maxx;;
+
+            int more_space = ((int) key->width_factor);
+            if (more_space < 0) {
+                more_space = 0;
+            }
+            if (i== 0 && more_space > 1 ) {
+                //more_space = 1;
+            }
+            //printf("more space for %f, %d ¥n", col->width_factor, more_space);
+
+			//int ww = key->width* key->width_factor + more_space*mx;;
+            if (more_space > 1) more += more_space -1;
+            int ww = key->width_factor*priv->key_width + priv->key_space_maxx*more_space;
+
+       //roww += key->width_factor*priv->key_width + priv->key_space_maxx;;
+       roww += ww;
 	   f += key->width_factor;
    }
    roww -= priv->key_space_maxx;
 
    if (roww > priv->ideal_width){
+       printf("longuest is  : %d ¥n \n", row);
        priv->ideal_width = roww;
        priv->ideal_index = row;
 	   priv->ideal_factor_width = f;
+       priv->more = more;
    }
 
   return rect;

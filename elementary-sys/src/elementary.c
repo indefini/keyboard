@@ -321,32 +321,6 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
   smart_keyboard_key_space_set(smart, 4, 2, 5, 5);
   smart_keyboard_padding_set(smart, 0, 2);
 
-  /*
-  smart_keyboard_key_add(smart, "Tab", 0, 1.3f, 1.f);
-  smart_keyboard_key_add(smart, "q", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "w", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "e", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "r", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "t", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "y", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "u", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "i", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "o", 0, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "p", 0, 1.f, 1.f);
-
-  smart_keyboard_key_add(smart, "Empty", 1, 1.6f, 1.f);
-  smart_keyboard_key_add(smart, "a", 1, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "s", 1, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "d", 1, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "f", 1, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "g", 1, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "h", 1, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "j", 1, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "k", 1, 1.f, 1.f);
-  smart_keyboard_key_add(smart, "l", 1, 1.f, 1.f);
-  //smart_keyboard_key_add(smart, ";", 1, 1.f, 1.f);
-  */
-
   edje_object_part_swallow(edje, "rect", smart);
   evas_object_show(smart);
 

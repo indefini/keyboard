@@ -60,8 +60,9 @@ fn rows4<'a>() -> Vec<Vec<&'a str>>
 {
     let row0 = vec![ "Escape","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "BackSpace,1.3" ];//, r"\" ];
     let row1 = vec![ "Tab,1.3", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return" ];
-    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash"];
+    let row2 = vec![ "Shift_L,1.6","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash", "up,1,Up"];
     let row3 = vec![ "Control_L,1.6", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
+    //let row3 = vec![ "Control_L,1.6", "__empty,2", "space,6", "__empty,1", "__close", "left,1,Left", "down,1,Down", "right,1,Right"];
 
     vec![row0, row1, row2, row3]
 }
@@ -77,7 +78,9 @@ fn rowsnum<'a>() -> Vec<Vec<&'a str>>
     let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "Return,1.7" ];//, r"\" ];
     let row1 = vec![ "Kanji,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return,1.4" ];
     let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash"];
-    let row3 = vec![ "Control_L,2.2", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
+    //let row3 = vec![ "Control_L,2.2", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
+    //let row3 = vec![ "Control_L,2.2", "__empty,1.8", "space,7", "__empty,1", "__reduce", "__close", "left,1,Left", "down,1,Down", "right,1,Right"];
+    let row3 = vec![ "Control_L,2.2", "__empty,0.8", "space,6", "__close", "left,1,Left", "down,1,Down", "right,1,Right"];
 
     vec![rownum, row0, row1, row2, row3]
 }
@@ -85,8 +88,8 @@ fn rowsnum<'a>() -> Vec<Vec<&'a str>>
 fn main() {
     unsafe { elm::init() };
 
-    let rows = rows4();
-    //let rows = rowsnum();
+    //let rows = rows4();
+    let rows = rowsnum();
 
     let mut container = Container {
         keys : Vec::new(),
@@ -177,10 +180,7 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                 s[0]
             };
 
-            if c.starts_with("__empty") {
-                //do nothing
-            }
-            else if c.starts_with("__reduce") {
+            if c.starts_with("__reduce") {
                 /*
                 unsafe {
                     elm::keyboard_fn_add(
@@ -236,9 +236,16 @@ fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut C
                         (width*w) as i32,
                         1);
                         */
+                let keyname = if c.starts_with("comma") {
+                    ","
+                }
+                else {
+                    s[0]
+                };
+
                     let r = elm::keyboard_rect_add(
                         k,
-                        cstring_new(s[0]),
+                        cstring_new(keyname),
                         row,
                         w);
 
@@ -377,7 +384,7 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     }
                 }
             }
-            else if unsafe {elm::is_point_inside(k.eo, x, y)} {
+            else if false && unsafe {elm::is_point_inside(k.eo, x, y)} {
                 k.down = true;
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
