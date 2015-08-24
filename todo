@@ -1,7 +1,7 @@
 Now
-- add reduce, close button
-- add useful keys
-- multitouch.
+- add more keys?
+- press/long key open small widget to press other key
+  or option longpress : repeat
 - easy button to reduce/close the keyboard.
 - enlightenment button/module to display the keyboard
 - display keyboard when activating an entry in efl first,
@@ -13,7 +13,7 @@ Later
 - japanese support
 - korean support
 - have a button to switch keybaord position on top/bottom
-- edit mode : 
+- edit mode :
   move current windows to not display anything below the keyboard...
   or make a mode with just one window and the keyboard
 

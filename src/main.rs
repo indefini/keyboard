@@ -77,10 +77,10 @@ fn rowsnum<'a>() -> Vec<Vec<&'a str>>
 
     let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "Return,1.7" ];//, r"\" ];
     let row1 = vec![ "Kanji,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return,1.4" ];
-    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash"];
+    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash", "up,1,Up"];
     //let row3 = vec![ "Control_L,2.2", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
     //let row3 = vec![ "Control_L,2.2", "__empty,1.8", "space,7", "__empty,1", "__reduce", "__close", "left,1,Left", "down,1,Down", "right,1,Right"];
-    let row3 = vec![ "Control_L,2.2", "__empty,0.8", "space,6", "__close", "left,1,Left", "down,1,Down", "right,1,Right"];
+    let row3 = vec![ "Control_L,2.2", "__empty,1.7", "space,6", "__close", "__empty,1", "left,1,Left", "down,1,Down", "right,1,Right"];
 
     vec![rownum, row0, row1, row2, row3]
 }

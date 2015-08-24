@@ -299,6 +299,10 @@ _smart_keyboard_calculate(Evas_Object *o)
             if (col->width_factor - ((int) col->width_factor)  > 0) {
                 more_space += 1;
             }
+            if (j== 0 ) {
+                more_space = 0;
+            }
+
             //if (j== 0 || more_space < 0) {
             if (more_space < 0) {
                 more_space = 0;
