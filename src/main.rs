@@ -44,6 +44,70 @@ pub struct Container
     shift : bool
 }
 
+pub struct Config
+{
+   key_width : usize,
+   key_height : usize,
+
+   key_space_minx : usize,
+   key_space_miny : usize,
+   key_space_maxx : usize,
+   key_space_maxy : usize,
+
+   paddingx : usize,
+   paddingy : usize,
+
+   //ideal_width;
+   //ideal_index;
+   //ideal_factor_width;
+   //int more;
+}
+
+fn get_size(
+        rows :&Vec<Vec<&str>>,
+        //config : &Config,
+        screenw : usize,
+        screenh : usize,
+        dpix : usize,
+        dpiy : usize
+        ) -> (usize, usize)
+    {
+    let mut max_col = 0f32;
+    for r in  rows.iter() {
+        //max_col = cmp::max(max_col, get_real_len(r));
+        max_col = max_col.max(get_real_len(r));
+    }
+
+    let rows_num = rows.len() as f32;
+
+    let width_mm = max_col * KEY_X_MM + (max_col - 1f32) * KEYSPACE_X_MM;
+    let height_mm = rows_num * KEY_Y_MM + (rows_num - 1f32) * KEYSPACE_Y_MM;
+
+    let width_px = mm_to_px(width_mm, dpix);
+    let height_px = mm_to_px(height_mm, dpiy);
+
+    if width_px <= screenw {
+        if height_px <= screenh {
+            return (width_px, height_px);
+        }
+        else {
+            //TODO recalc height
+            return (width_px, height_px);
+        }
+    }
+    else {
+        let ratio = screenw as f32 / width_px  as f32;
+        return (screenw, (height_px as f32 * ratio) as usize);
+
+    }
+
+
+
+    (
+        width_px, height_px
+    )
+    }
+
 /*
 impl Container
 {
@@ -88,6 +152,11 @@ fn rowsnum<'a>() -> Vec<Vec<&'a str>>
 fn main() {
     unsafe { elm::init() };
 
+    let win = unsafe {elm::window_new()};
+    let (dpix, dpiy, w, h) = elm::get_dpi_size(win);
+
+    let config = calc_config(dpix, dpiy);
+
     //let rows = rows4();
     let rows = rowsnum();
 
@@ -97,7 +166,7 @@ fn main() {
         shift : false
     };
 
-    create_keyboard_with_rects(&rows, &mut container);
+    create_keyboard_with_rects(&rows, &mut container, win);
 
     //create_keyboard_with_table_buttons(&rows);
 
@@ -106,7 +175,25 @@ fn main() {
     }
 }
 
-fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>)
+fn calc_config(dpix : usize, dpiy : usize) //, rows :&Vec<Vec<&str>>)
+    -> Config
+{
+    Config {
+        key_width : mm_to_px(KEY_X_MM, dpix),
+        key_height : mm_to_px(KEY_Y_MM, dpiy),
+
+        key_space_minx : mm_to_px(KEYSPACE_X_MM, dpix),
+        key_space_miny : mm_to_px(KEYSPACE_Y_MM, dpiy),
+        key_space_maxx : mm_to_px(KEYSPACE_X_MM, dpix),
+        key_space_maxy : mm_to_px(KEYSPACE_Y_MM, dpiy),
+
+        paddingx : 0,
+        paddingy : 0,
+    }
+}
+
+
+fn calc_keyboard_size(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&Vec<Vec<&str>>)
     -> (usize, usize, usize, usize, usize, usize)
 {
     let mut max_col = 0f32;
@@ -121,7 +208,8 @@ fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>)
     let height_mm = rows_num * KEY_Y_MM + (rows_num - 1f32) * KEYSPACE_Y_MM;
 
     let width_px = mm_to_px(width_mm, dpix);
-    let height_px = mm_to_px(height_mm, dpix);
+    let height_px = mm_to_px(height_mm, dpiy);
+
 
     (
         width_px, height_px,
@@ -130,16 +218,24 @@ fn calc_keyboard_size(dpix : usize, dpiy : usize, rows :&Vec<Vec<&str>>)
         mm_to_px(KEYSPACE_X_MM, dpix),
         mm_to_px(KEYSPACE_Y_MM, dpiy),
      )
+
 }
 
-fn create_keyboard_with_rects(rows : &Vec<Vec<&str>>, container : &mut Container)
+fn create_keyboard_with_rects(
+    rows : &Vec<Vec<&str>>,
+    container : &mut Container,
+    win : *const elm::Evas_Object
+    )
 {
-    let win = unsafe {elm::window_new()};
     let (dpix, dpiy, w, h) = elm::get_dpi_size(win);
     println!("dpix, dpiy {}, {}", dpix, dpiy);
-    let (mut px, mut py, kx, ky, ksx, ksy) = calc_keyboard_size(dpix, dpiy, rows);
+    let (mut px, mut py, kx, ky, ksx, ksy) = calc_keyboard_size(dpix, dpiy, w, h, rows);
     //px = cmp::min(px, w);
     //py = cmp::min(py, h);
+
+    let (sizex, sizey) = get_size(rows, w, h, dpix, dpiy);
+    px = sizex;
+    py = sizey;
 
     println!("px, py {}, {}, key space {}, {}", px, py, ksx, ksy);
     let k = unsafe {elm::keyboard_new(win, px as i32, py as i32, kx as i32, ky as i32, ksx as i32, ksy as i32)};

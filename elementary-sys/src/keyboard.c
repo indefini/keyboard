@@ -35,7 +35,6 @@ struct _Smart_Keyboard
 {
    Evas_Object_Smart_Clipped_Data base;
    Evas_Object *border;
-   Evas_Object *children[2];
 
    unsigned int key_width;
    unsigned int key_height;
@@ -121,22 +120,8 @@ _smart_keyboard_add(Evas_Object *o)
    evas_object_image_border_set(priv->border, 3, 3, 3, 3);
    evas_object_image_border_center_fill_set(
      priv->border, EVAS_BORDER_FILL_NONE);
-   evas_object_show(priv->border);
+   //evas_object_show(priv->border);
    evas_object_smart_member_add(priv->border, o);
-
-   /*
-   Evas_Object *rect = evas_object_rectangle_add(e);
-   evas_object_color_set(rect, rand() % 255, rand() % 255, rand() % 255, 255);
-   evas_object_show(rect);
-   priv->children[0] = rect;
-   evas_object_smart_member_add(rect, o);
-
-   rect = evas_object_rectangle_add(e);
-   evas_object_color_set(rect, rand() % 255, rand() % 255, rand() % 255, 255);
-   evas_object_show(rect);
-   priv->children[1] = rect;
-   evas_object_smart_member_add(rect, o);
-   */
 
    priv->rows = eina_array_new(6);
 }
@@ -145,18 +130,6 @@ static void
 _smart_keyboard_del(Evas_Object *o)
 {
   Smart_Keyboard * priv = evas_object_smart_data_get(o);
-
-   if (priv->children[0])
-     {
-       // _evas_smart_example_child_callbacks_unregister(priv->children[0]);
-        priv->children[0] = NULL;
-     }
-
-   if (priv->children[1])
-     {
-        //_evas_smart_example_child_callbacks_unregister(priv->children[1]);
-        priv->children[1] = NULL;
-     }
 
    _smart_keyboard_parent_sc->del(o);
 }
@@ -199,18 +172,6 @@ _smart_keyboard_calculate(Evas_Object *o)
    unsigned int mx = priv->key_space_maxx;
    unsigned int my = priv->key_space_maxy;
 
-   if (priv->children[0])
-     {
-        evas_object_move(priv->children[0], x + px, y + py);
-        evas_object_resize(priv->children[0], (w / 2) - px -mx, (h / 2) - py -my);
-     }
-
-   if (priv->children[1])
-     {
-        evas_object_move(priv->children[1], x + (w / 2) + mx, y + (h / 2) + my);
-        evas_object_resize(priv->children[1], (w / 2) - px - mx, (h / 2) - px -my);
-     }
-
    //float ix = get_ideal_width(priv);
    float ix = priv->ideal_width;
    float iy = get_ideal_height(priv);
@@ -240,9 +201,12 @@ _smart_keyboard_calculate(Evas_Object *o)
 	   }
 	   int keys_count = eina_array_count(longrow);
 	   int left_for_keys = w - (priv->more + keys_count -1) * mx;
-	   //float yop = (float) left_for_keys/ (float)keys_count*priv->ideal_factor_width;
-	   //width = ((float) left_for_keys)/priv->ideal_factor_width;
+	   ////float yop = (float) left_for_keys/ (float)keys_count*priv->ideal_factor_width;
+	   ////width = ((float) left_for_keys)/priv->ideal_factor_width;
 	   width = left_for_keys/priv->ideal_factor_width;
+	   //int multiplier = left_for_keys/priv->ideal_factor_width/mx;
+	   //width = mx * multiplier;
+
    }
 
    if (iy <= h) {
@@ -487,6 +451,14 @@ void smart_keyboard_key_space_set(
   }
 }
 
+void smart_keyboard_size_get(
+		Evas_Object* keyboard,
+		Evas_Coord* x,
+		Evas_Coord* y)
+{
+  Smart_Keyboard* priv = evas_object_smart_data_get(keyboard);
+
+}
 
 
 
