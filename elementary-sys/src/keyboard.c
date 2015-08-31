@@ -174,7 +174,6 @@ _smart_keyboard_calculate(Evas_Object *o)
 
    //float ix = get_ideal_width(priv);
    float ix = priv->ideal_width;
-   float iy = get_ideal_height(priv);
 
    //float width = 20.0f;
    int width = 20;
@@ -209,13 +208,16 @@ _smart_keyboard_calculate(Evas_Object *o)
 
    }
 
+   /*
+   float iy = get_ideal_height(priv);
    if (iy <= h) {
 	   height = priv->key_height;
 	   my = priv->key_space_maxy;
 	   printf("height, my : %f , %d\n", height,my);
    }
-   else {
-	   float ratio = ((float)h)/iy;
+   else
+   {
+	   //float ratio = ((float)h)/iy;
 	   printf("ratio : %f \n", ratio);
 	   my = priv->key_space_maxy * ratio;
 	   if (my < priv->key_space_miny) {
@@ -225,9 +227,28 @@ _smart_keyboard_calculate(Evas_Object *o)
 	   int rows_count = eina_array_count(priv->rows);
 	   int left_for_keys = h - (rows_count -1) * my;
 	   height = ((float) left_for_keys)/rows_count;
-	   int hh = ((int)height) * rows_count + (rows_count-1) * my;;
+	   int hh = ((int)height) * rows_count + (rowsj_count-1) * my;;
    	   py = ((int) priv->paddingy) + ((int) ( ((int)h - (int) hh)/2));
    }
+   */
+
+   float ratio = ((float) width) / ((float) priv->key_width);
+   height = priv->key_height *ratio;
+   my = priv->key_space_maxy *ratio;
+   if (my < priv->key_space_miny) {
+		   my = priv->key_space_miny;
+   }
+	   int rows_count = eina_array_count(priv->rows);
+   float iy = height*rows_count + my * (rows_count -1);
+
+   if (iy > h) {
+       //TODO
+       py = 0;
+   }
+   else {
+       py = (h-iy)/2.0f;
+   }
+
 
 
 
