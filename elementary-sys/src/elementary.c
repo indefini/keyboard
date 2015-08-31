@@ -524,8 +524,8 @@ void keyboard_bg_add(
 
   evas_object_data_set(r, "cb", cb);
   evas_object_data_set(r, "cb_up", cb_up);
-  evas_object_data_set(r, "cb_data", cb_data);
   evas_object_data_set(r, "cb_move", cb_move);
+  evas_object_data_set(r, "cb_data", cb_data);
 
   evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_DOWN, _rect_mouse_down, NULL);
   evas_object_event_callback_add(r, EVAS_CALLBACK_MOUSE_UP, _rect_mouse_up, NULL);
@@ -533,7 +533,6 @@ void keyboard_bg_add(
   evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_DOWN, _rect_multi_down, NULL);
   evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_UP, _rect_multi_up, NULL);
   evas_object_event_callback_add(r, EVAS_CALLBACK_MULTI_MOVE, _rect_multi_move, NULL);
-
 }
 
 Eina_Bool
@@ -546,4 +545,5 @@ is_point_inside(Evas_Object* o, int x, int y)
    x >= ox && x <= ox + ow &&
    y >= oy && y <= oy + oh;
 }
+
 

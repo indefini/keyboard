@@ -2,6 +2,7 @@ extern crate libc;
 
 use libc::{c_void, c_int, c_char, c_float};//, c_ulong, c_long, c_uint, c_uchar, size_t};
 
+pub type AnimCb = extern fn(data : *mut c_void) -> bool;
 pub type RustCb = extern fn(data : *mut c_void);
 pub type PressedCb = extern fn(data : *mut c_void, device : c_int, x : c_int, y : c_int);
 
@@ -9,6 +10,8 @@ pub type PressedCb = extern fn(data : *mut c_void, device : c_int, x : c_int, y 
 pub struct Keyboard;
 #[repr(C)]
 pub struct Evas_Object;
+#[repr(C)]
+pub struct Ecore_Animator;
 
 
 extern "C" {
@@ -66,6 +69,9 @@ extern "C" {
     pub fn evas_object_color_set(o : *mut Evas_Object, r : c_int, g : c_int, b : c_int, a : c_int);
     fn elm_win_screen_dpi_get(win : *const Evas_Object, dpix : *mut c_int, dpiy : *mut c_int);
     fn elm_win_screen_size_get(win : *const Evas_Object, x : *mut c_int, y : *mut c_int, w : *mut c_int, h : *mut c_int);
+
+    pub fn ecore_animator_add(cb : AnimCb, data :*const c_void) -> *const Ecore_Animator;
+    pub fn ecore_animator_del(animator : *const Ecore_Animator);
 }
 
 pub fn get_dpi_size(win : *const Evas_Object) -> (usize, usize, usize, usize)

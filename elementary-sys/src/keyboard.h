@@ -11,6 +11,7 @@ struct _Keyboard
 };
 
 typedef void (rust_cb)(void* data);
+typedef Eina_Bool (anim_cb)(void* data);
 typedef void (pressed_cb)(void* data, int device, int x, int y);
 
 Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx, int ksy);

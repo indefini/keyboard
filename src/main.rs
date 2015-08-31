@@ -417,6 +417,11 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                              elm::ecore_x_test_fake_key_down(cstring_new(s));
                             }
                         }
+                        else if s == "BackSpace" {
+                            unsafe {
+                             elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
+                        }
                         else {
                             unsafe {
                              elm::ecore_x_test_fake_key_press(cstring_new(s));
@@ -449,6 +454,11 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     unsafe {
                      elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
                      }
+                }
+                else if k.name == "BackSpace" {
+                    unsafe {
+                        elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+                    }
                 }
                 k.down = false;
                 //println!("found object {} ", k.name);
@@ -508,6 +518,12 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
             }
         }
     }
+}
+
+extern fn input_update(data : *mut c_void) -> bool
+{
+    println!("update");
+    true
 }
 
 fn get_button_count(v : &Vec<&str>) -> usize
