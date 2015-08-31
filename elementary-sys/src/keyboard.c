@@ -212,6 +212,7 @@ _smart_keyboard_calculate(Evas_Object *o)
    if (iy <= h) {
 	   height = priv->key_height;
 	   my = priv->key_space_maxy;
+	   printf("height, my : %f , %d\n", height,my);
    }
    else {
 	   float ratio = ((float)h)/iy;

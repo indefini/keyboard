@@ -10,8 +10,8 @@ use std::mem;
 
 const KEY_X_MM : f32 = 17f32;
 const KEY_Y_MM : f32 = 17f32;
-const KEYSPACE_X_MM : f32 = 2f32;
-const KEYSPACE_Y_MM : f32 = 2f32;
+const KEYSPACE_X_MM : f32 = 0.8f32;
+const KEYSPACE_Y_MM : f32 = 0.8f32;
 
 pub enum KeyKind
 {

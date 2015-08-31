@@ -317,8 +317,8 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
 
   //TODO
   Evas_Object* smart = smart_keyboard_add(e);
-  smart_keyboard_key_max_set(smart, 300, 50);
-  smart_keyboard_key_space_set(smart, 4, 2, 5, 5);
+  smart_keyboard_key_max_set(smart, kx, ky);
+  smart_keyboard_key_space_set(smart, 4, 2, ksx, ksy);
   smart_keyboard_padding_set(smart, 0, 2);
 
   edje_object_part_swallow(edje, "rect", smart);
