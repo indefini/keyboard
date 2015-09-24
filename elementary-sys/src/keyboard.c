@@ -9,6 +9,14 @@ struct _Key
 	Evas_Object* text;
 };
 
+typedef struct _Popup Popup;
+struct _Popup
+{
+	Evas_Object* object;
+	Evas_Object* text;
+};
+
+
 Key* key_new(float width_factor, Evas_Object* o, Evas_Object* txt)
 {
 	Key* k = calloc(1, sizeof *k);
@@ -17,6 +25,15 @@ Key* key_new(float width_factor, Evas_Object* o, Evas_Object* txt)
 	k->text = txt;
 
 	return k;
+}
+
+Eo* text_new(Evas* e)
+{
+  Evas_Object* t = evas_object_text_add(e);
+  evas_object_text_style_set(t, EVAS_TEXT_STYLE_PLAIN);
+  evas_object_color_set(t, 200, 200, 200, 255);
+  evas_object_text_font_set(t, "Ubuntu", 10);
+  return t;
 }
 
 static const Evas_Smart_Cb_Description _smart_callbacks[] =
@@ -53,6 +70,7 @@ struct _Smart_Keyboard
    int more;
 
    Eina_Array* rows;
+   Popup* popup;
 };
 
 static float get_ideal_height(Smart_Keyboard* k)
@@ -124,6 +142,17 @@ _smart_keyboard_add(Evas_Object *o)
    evas_object_smart_member_add(priv->border, o);
 
    priv->rows = eina_array_new(6);
+
+   Eo* rect = evas_object_rectangle_add(e);
+   evas_object_color_set(rect, 180, 180, 180, 255);
+   Eo* t = text_new(e);
+   evas_object_raise(t);
+   evas_object_text_text_set(t, "test");
+
+   Popup* pp = calloc(1, sizeof *pp);
+   pp->object = rect;
+   pp->text = t;
+   priv->popup = pp;
 }
 
 static void
@@ -367,10 +396,7 @@ smart_keyboard_key_add(
   evas_object_show(rect);
   evas_object_smart_member_add(rect, keyboard);
 
-  Evas_Object* t = evas_object_text_add(e);
-  evas_object_text_style_set(t, EVAS_TEXT_STYLE_PLAIN);
-  evas_object_color_set(t, 200, 200, 200, 255);
-  evas_object_text_font_set(t, "Ubuntu", 10);
+  Eo* t = text_new(e);
   evas_object_text_text_set(t, keyname);
   evas_object_raise(t);
   evas_object_show(t);

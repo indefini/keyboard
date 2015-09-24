@@ -61,6 +61,11 @@ extern "C" {
         cb_move : PressedCb,
         cb_data : *const c_void);
 
+    pub fn keyboard_popup_show(
+        keyboard : *const Keyboard,
+        eo : *const Evas_Object,
+        name : *const c_char);
+
     pub fn is_point_inside(o : *const Evas_Object, x : c_int, y : c_int) -> bool;
     //pub fn fake_key(keyname : *const c_char);
     pub fn ecore_x_test_fake_key_press(keyname : *const c_char);

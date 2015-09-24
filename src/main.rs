@@ -41,7 +41,8 @@ pub struct Container
 {
     keys : Vec<Vec<Key>>,
     touch : [Touch;10],
-    shift : bool
+    shift : bool,
+    keyboard : *mut elm::Keyboard
 }
 
 pub struct Config
@@ -160,13 +161,16 @@ fn main() {
     //let rows = rows4();
     let rows = rowsnum();
 
+    let keyboard = create_keyboard(&rows, win);
+
     let mut container = Container {
         keys : Vec::new(),
         touch : [Touch {x:0, y:0, down:false}; 10],
-        shift : false
+        shift : false,
+        keyboard : keyboard
     };
 
-    create_keyboard_with_rects(&rows, &mut container, win);
+    create_keys_bg(&rows, &mut container);
 
     //create_keyboard_with_table_buttons(&rows);
 
@@ -221,11 +225,10 @@ fn calc_keyboard_size(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&V
 
 }
 
-fn create_keyboard_with_rects(
+fn create_keyboard(
     rows : &Vec<Vec<&str>>,
-    container : &mut Container,
-    win : *const elm::Evas_Object
-    )
+    win : *const elm::Evas_Object)
+    -> *mut elm::Keyboard
 {
     let (dpix, dpiy, w, h) = elm::get_dpi_size(win);
     println!("dpix, dpiy {}, {}", dpix, dpiy);
@@ -238,9 +241,17 @@ fn create_keyboard_with_rects(
     py = sizey;
 
     println!("px, py {}, {}, key space {}, {}", px, py, ksx, ksy);
-    let k = unsafe {elm::keyboard_new(win, px as i32, py as i32, kx as i32, ky as i32, ksx as i32, ksy as i32)};
+    let keyboard = unsafe {elm::keyboard_new(win, px as i32, py as i32, kx as i32, ky as i32, ksx as i32, ksy as i32)};
 
-    create_keys(k, rows, container);
+    keyboard
+}
+
+fn create_keys_bg(
+    rows : &Vec<Vec<&str>>,
+    container : &mut Container,
+    )
+{
+    create_keys(rows, container);
     unsafe {elm::keyboard_bg_add(
             input_down,
             input_up,
@@ -249,8 +260,9 @@ fn create_keyboard_with_rects(
     };
 }
 
-fn create_keys(k: *mut elm::Keyboard, rows : &Vec<Vec<&str>>, container : &mut Container)
+fn create_keys(rows : &Vec<Vec<&str>>, container : &mut Container)
 {
+    let k = container.keyboard;
     let mut row = 0;
     for r in rows.iter() {
 
@@ -416,6 +428,11 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                             unsafe {
                              elm::ecore_x_test_fake_key_down(cstring_new(s));
                             }
+                unsafe { elm::keyboard_popup_show(
+                        con.keyboard,
+                        k.eo,
+                        cstring_new(s));
+                }
                         }
                         else if s == "BackSpace" {
                             unsafe {

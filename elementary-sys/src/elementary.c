@@ -289,6 +289,14 @@ Evas_Object* window_new()
   return win;
 }
 
+void popup_new(Eo* parent)
+{
+  	Evas* e = evas_object_evas_get(parent);
+	Eo* popup =  evas_object_rectangle_add(e);
+
+}
+
+
 Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx, int ksy)
 {
   int x, y, w, h;
@@ -547,4 +555,7 @@ is_point_inside(Evas_Object* o, int x, int y)
    y >= oy && y <= oy + oh;
 }
 
-
+void keyboard_popup_show(Keyboard* k, Evas_Object* o, const char* name)
+{
+	printf("todo \n");
+}
