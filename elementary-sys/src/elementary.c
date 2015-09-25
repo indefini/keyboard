@@ -555,7 +555,11 @@ is_point_inside(Evas_Object* o, int x, int y)
    y >= oy && y <= oy + oh;
 }
 
-void keyboard_popup_show(Keyboard* k, Evas_Object* o, const char* name)
+void keyboard_popup_show(
+      Keyboard* k,
+      Evas_Object* o,
+      const char* name)
 {
-	printf("todo \n");
+  smart_keyboard_show_popup(k->smart, o, name);
 }
+

@@ -428,11 +428,6 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                             unsafe {
                              elm::ecore_x_test_fake_key_down(cstring_new(s));
                             }
-                unsafe { elm::keyboard_popup_show(
-                        con.keyboard,
-                        k.eo,
-                        cstring_new(s));
-                }
                         }
                         else if s == "BackSpace" {
                             unsafe {
@@ -443,6 +438,11 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                             unsafe {
                              elm::ecore_x_test_fake_key_press(cstring_new(s));
                             }
+                unsafe { elm::keyboard_popup_show(
+                        con.keyboard,
+                        k.eo,
+                        cstring_new(s));
+                }
                         }
 
                     },

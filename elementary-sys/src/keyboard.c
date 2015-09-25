@@ -509,4 +509,35 @@ void smart_keyboard_size_get(
 }
 
 
+void smart_keyboard_show_popup(
+      Evas_Object* k,
+      Evas_Object* o,
+      const char* name)
+{
+	printf("todo \n");
+  Smart_Keyboard* priv = evas_object_smart_data_get(k);
+  Eo* rect = priv->popup->object;
+  Eo* text = priv->popup->text;
+
+  Evas_Coord x, y, w, h;
+  evas_object_geometry_get(o, &x, &y, &w, &h);
+
+  evas_object_move(rect, x, y - 100);
+  evas_object_resize(rect, w, h);
+  evas_object_show(rect);
+
+  evas_object_text_text_set(text, name);
+  evas_object_move(text, x, y - 100);
+  evas_object_show(text);
+}
+
+void smart_keyboard_hide_popup(
+      Evas_Object* k)
+{
+  Smart_Keyboard* priv = evas_object_smart_data_get(k);
+  Eo* rect = priv->popup->object;
+  evas_object_hide(rect);
+  Eo* text = priv->popup->text;
+  evas_object_hide(text);
+}
 

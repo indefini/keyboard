@@ -54,5 +54,10 @@ void smart_keyboard_padding_set(
 		Evas_Object *keyboard,
 		Evas_Coord x, Evas_Coord y);
 
+void keyboard_popup_show(
+      Keyboard* k,
+      Evas_Object* o,
+      const char* name);
+
 
 #endif
