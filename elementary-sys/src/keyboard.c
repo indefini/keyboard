@@ -52,6 +52,7 @@ struct _Smart_Keyboard
 {
    Evas_Object_Smart_Clipped_Data base;
    Evas_Object *border;
+   Evas_Object *win;
 
    unsigned int key_width;
    unsigned int key_height;
@@ -143,14 +144,56 @@ _smart_keyboard_add(Evas_Object *o)
 
    priv->rows = eina_array_new(6);
 
-   Eo* rect = evas_object_rectangle_add(e);
+   Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_TOOLTIP);
+   evas_object_name_set(winpop, strdup("keypop"));
+  //elm_win_autodel_set(winpop, EINA_TRUE);
+  //evas_object_smart_callback_add(win, "delete,request", _window_del, NULL);
+
+   /*
+  Evas_Object* bg = elm_bg_add(winpop);
+  evas_object_name_set(bg, strdup("bg"));
+  evas_object_show(bg);
+  evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  elm_win_resize_object_add(winpop, bg);
+  */
+
+  //elm_win_keyboard_win_set(win, EINA_TRUE);
+  elm_win_prop_focus_skip_set(winpop, EINA_TRUE);
+  //elm_win_override_set(win, EINA_TRUE);
+  elm_win_screen_constrain_set(winpop, EINA_TRUE);
+  //elm_win_sticky_set(win, EINA_TRUE);
+  elm_win_borderless_set(winpop, EINA_TRUE);
+
+  //Ecore_X_Window *xwin = elm_win_xwindow_get(winpop);
+  ////ecore_x_e_virtual_keyboard_set(
+  //ecore_x_window_cursor_show(xwin, EINA_FALSE);
+
+
+  //evas_object_show(win);
+
+
+
+
+
+
+
+
+   Evas* ew = evas_object_evas_get(winpop);
+   Eo* rect = evas_object_rectangle_add(ew);
+   evas_object_show(rect);
    evas_object_color_set(rect, 180, 180, 180, 255);
-   Eo* t = text_new(e);
+   Eo* t = text_new(ew);
    evas_object_raise(t);
+   evas_object_show(t);
    evas_object_text_text_set(t, "test");
+  evas_object_size_hint_weight_set(rect, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  elm_win_resize_object_add(winpop, rect);
+
+  evas_object_size_hint_weight_set(t, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  elm_win_resize_object_add(winpop, t);
 
    Popup* pp = calloc(1, sizeof *pp);
-   pp->object = rect;
+   pp->object = winpop;//rect;
    pp->text = t;
    priv->popup = pp;
 }
@@ -477,7 +520,6 @@ void smart_keyboard_padding_set(
   }
 }
 
-
 void smart_keyboard_key_space_set(
 		Evas_Object *keyboard,
 		Evas_Coord minx, Evas_Coord miny,
@@ -519,15 +561,19 @@ void smart_keyboard_show_popup(
   Eo* rect = priv->popup->object;
   Eo* text = priv->popup->text;
 
+  Evas_Coord kx, ky, kw, kh;
+  evas_object_geometry_get(priv->win, &kx, &ky, &kw, &kh);
+
   Evas_Coord x, y, w, h;
   evas_object_geometry_get(o, &x, &y, &w, &h);
 
-  evas_object_move(rect, x, y - 100);
+  printf("ky : %d \n", ky);
+  evas_object_move(rect, x, ky + y - 100);
   evas_object_resize(rect, w, h);
   evas_object_show(rect);
 
   evas_object_text_text_set(text, name);
-  evas_object_move(text, x, y - 100);
+  evas_object_move(text, kx + x, ky + y - 100);
   evas_object_show(text);
 }
 
@@ -539,5 +585,101 @@ void smart_keyboard_hide_popup(
   evas_object_hide(rect);
   Eo* text = priv->popup->text;
   evas_object_hide(text);
+}
+
+/*
+Eo* keyboard_create(Evas_Object* win)
+{
+  Evas* e = evas_object_evas_get(win);
+  Evas_Object* smart = smart_keyboard_add(e);
+  smart_keyboard_key_max_set(smart, kx, ky);
+  smart_keyboard_key_space_set(smart, 4, 2, ksx, ksy);
+  smart_keyboard_padding_set(smart, 0, 2);
+  Smart_Keyboard* priv = evas_object_smart_data_get(keyboard);
+  priv->win = win;
+
+  return smart;
+
+}
+*/
+
+static void
+_reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *event_info EINA_UNUSED)
+{
+   Evas_Coord minw, minh;
+   Evas_Object *edje = data;
+
+   edje_object_size_min_get(edje, &minw, &minh);
+   if ((minw <= 0) && (minh <= 0))
+     edje_object_size_min_calc(edje, &minw, &minh);
+
+   evas_object_size_hint_min_set(stack, minw, minh);
+}
+
+static Evas_Object *
+_create_stack(Evas *evas)//, const struct opts *opts)
+{
+   Evas_Object *stack = evas_object_box_add(evas);
+   if (!stack)
+     {
+        fputs("ERROR: could not create object stack (box).\n", stderr);
+        return NULL;
+     }
+   //evas_object_box_layout_set(stack, evas_object_box_layout_stack, NULL, NULL);
+   evas_object_box_layout_set(stack, evas_object_box_layout_vertical, NULL, NULL);
+   //evas_object_resize(stack, opts->size.w, opts->size.h);
+   //evas_object_resize(stack, 300, 300);
+   evas_object_size_hint_weight_set(stack, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+   evas_object_size_hint_align_set(stack, EVAS_HINT_FILL, EVAS_HINT_FILL);
+   evas_object_show(stack);
+   return stack;
+}
+
+
+
+Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx, int ksy)
+{
+  int x, y, w, h;
+  elm_win_screen_size_get(win, &x, &y, &w, &h);
+  //printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
+
+  //int winh = h/2.5;
+  evas_object_resize(win, w, py);
+  //elm_win_size_base_set(win, , winh);
+  evas_object_move(win, 0, h - py);
+  //test size
+  //evas_object_resize(win, 206, 156);
+
+  //printf("screen dpx, dpy : %d, %d \n", dpx, dpy);
+
+  Evas* e = evas_object_evas_get(win);
+  Evas_Object* edje = edje_test(e, px, py);
+  //edje_edit_group_max_w_set(edje, 721);
+  //edje_edit_group_max_h_set(edje, py);
+
+  Evas_Object* stack = _create_stack(e);
+  evas_object_box_append(stack, edje);
+  evas_object_event_callback_add(stack, EVAS_CALLBACK_CHANGED_SIZE_HINTS,
+                                  _reset_size_hints, edje);
+
+  elm_win_resize_object_add(win, stack);
+
+  //TODO
+  Evas_Object* smart = smart_keyboard_add(e);
+  smart_keyboard_key_max_set(smart, kx, ky);
+  smart_keyboard_key_space_set(smart, 4, 2, ksx, ksy);
+  smart_keyboard_padding_set(smart, 0, 2);
+  Smart_Keyboard* priv = evas_object_smart_data_get(smart);
+  priv->win = win;
+
+  edje_object_part_swallow(edje, "rect", smart);
+  evas_object_show(smart);
+
+
+  Keyboard* k = calloc(1, sizeof *k);
+  k->win = win;
+  k->smart = smart;
+
+  return k;
 }
 

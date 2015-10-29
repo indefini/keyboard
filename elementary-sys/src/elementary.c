@@ -196,6 +196,7 @@ _create_stack(Evas *evas)//, const struct opts *opts)
    return stack;
 }
 
+/*
 static void
 _reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *event_info EINA_UNUSED)
 {
@@ -208,6 +209,7 @@ _reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *eve
 
    evas_object_size_hint_min_set(stack, minw, minh);
 }
+*/
 
 Evas_Object* edje_test(Evas* e, int width, int height)
 {
@@ -296,50 +298,6 @@ void popup_new(Eo* parent)
 
 }
 
-
-Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx, int ksy)
-{
-  int x, y, w, h;
-  elm_win_screen_size_get(win, &x, &y, &w, &h);
-  //printf("screen x, y, w, h : %d, %d, %d, %d \n", x, y, w, h);
-
-  //int winh = h/2.5;
-  evas_object_resize(win, w, py);
-  //elm_win_size_base_set(win, , winh);
-  evas_object_move(win, 0, h - py);
-  //test size
-  //evas_object_resize(win, 206, 156);
-
-  //printf("screen dpx, dpy : %d, %d \n", dpx, dpy);
-
-  Evas* e = evas_object_evas_get(win);
-  Evas_Object* edje = edje_test(e, px, py);
-  //edje_edit_group_max_w_set(edje, 721);
-  //edje_edit_group_max_h_set(edje, py);
-
-  Evas_Object* stack = _create_stack(e);
-  evas_object_box_append(stack, edje);
-  evas_object_event_callback_add(stack, EVAS_CALLBACK_CHANGED_SIZE_HINTS,
-                                  _reset_size_hints, edje);
-
-  elm_win_resize_object_add(win, stack);
-
-  //TODO
-  Evas_Object* smart = smart_keyboard_add(e);
-  smart_keyboard_key_max_set(smart, kx, ky);
-  smart_keyboard_key_space_set(smart, 4, 2, ksx, ksy);
-  smart_keyboard_padding_set(smart, 0, 2);
-
-  edje_object_part_swallow(edje, "rect", smart);
-  evas_object_show(smart);
-
-
-  Keyboard* k = calloc(1, sizeof *k);
-  k->win = win;
-  k->smart = smart;
-
-  return k;
-}
 
 static Evas_Object* _keyboard_add(Keyboard* keyboard, const char* keyname, int col, int row, int width, int height)
 {

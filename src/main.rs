@@ -426,7 +426,7 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                         if s == "Shift_L" && !con.shift {
                             con.shift = true;
                             unsafe {
-                             elm::ecore_x_test_fake_key_down(cstring_new(s));
+                                elm::ecore_x_test_fake_key_down(cstring_new(s));
                             }
                         }
                         else if s == "BackSpace" {
