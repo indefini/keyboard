@@ -66,6 +66,9 @@ extern "C" {
         eo : *const Evas_Object,
         name : *const c_char);
 
+    pub fn keyboard_popup_hide(
+        keyboard : *const Keyboard);
+
     pub fn is_point_inside(o : *const Evas_Object, x : c_int, y : c_int) -> bool;
     //pub fn fake_key(keyname : *const c_char);
     pub fn ecore_x_test_fake_key_press(keyname : *const c_char);

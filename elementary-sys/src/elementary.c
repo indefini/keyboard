@@ -3,7 +3,7 @@
 
 Evas_Object* _win;
 //Evas_Object* _table;
-Eina_List* _btns = NULL;
+//Eina_List* _btns = NULL;
 
 void init()
 {
@@ -177,6 +177,7 @@ _on_pressed_fn(void *data, Evas_Object *obj, void *event_info)
   }
 }
 
+/*
 static Evas_Object *
 _create_stack(Evas *evas)//, const struct opts *opts)
 {
@@ -196,7 +197,6 @@ _create_stack(Evas *evas)//, const struct opts *opts)
    return stack;
 }
 
-/*
 static void
 _reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *event_info EINA_UNUSED)
 {
@@ -210,52 +210,6 @@ _reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *eve
    evas_object_size_hint_min_set(stack, minw, minh);
 }
 */
-
-Evas_Object* edje_test(Evas* e, int width, int height)
-{
-   Evas_Object *edje;
-   edje = edje_object_add(e);
-   if (!edje){
-     EINA_LOG_CRIT("could not create edje object!");
-     return NULL;
-   }
-   if (!edje_object_file_set(edje, "layout.edj", "main")) {
-        int err = edje_object_load_error_get(edje);
-        const char *errmsg = edje_load_error_str(err);
-        EINA_LOG_ERR("could not load 'my_group' from .edj file: %s",
-                     errmsg);
-        evas_object_del(edje);
-        return NULL;
-   }
-   /*
-   if (!edje_object_part_text_set(edje, "text", text)) {
-     EINA_LOG_WARN("could not set the text. "
-           "Maybe part 'text' does not exist?");
-   }
-   */
-
-   //evas_object_move(edje, 0, 0);
-   //evas_object_resize(edje, 100, 100);
-
-   Evas_Coord minw, minh, maxw, maxh;
-   edje_edit_group_max_w_set(edje, width);
-   edje_edit_group_max_h_set(edje, height);
-
-   edje_object_size_max_get(edje, &maxw, &maxh);
-   edje_object_size_min_get(edje, &minw, &minh);
-   printf("edje max %d, %d \n", maxw, maxh);
-   if ((minw <= 0) && (minh <= 0))
-   edje_object_size_min_calc(edje, &minw, &minh);
-
-   evas_object_size_hint_max_set(edje, maxw, maxh);
-   evas_object_size_hint_min_set(edje, minw, minh);
-
-   evas_object_size_hint_align_set(edje, EVAS_HINT_FILL, EVAS_HINT_FILL);
-   evas_object_size_hint_weight_set(edje, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-
-   evas_object_show(edje);
-   return edje;
-}
 
 Evas_Object* window_new()
 {
@@ -519,5 +473,11 @@ void keyboard_popup_show(
       const char* name)
 {
   smart_keyboard_show_popup(k->smart, o, name);
+}
+
+void keyboard_popup_hide(
+      Keyboard* k)
+{
+  smart_keyboard_hide_popup(k->smart);
 }
 

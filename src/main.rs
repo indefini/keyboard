@@ -436,13 +436,13 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                         }
                         else {
                             unsafe {
-                             elm::ecore_x_test_fake_key_press(cstring_new(s));
+                                elm::ecore_x_test_fake_key_press(cstring_new(s));
                             }
-                unsafe { elm::keyboard_popup_show(
-                        con.keyboard,
-                        k.eo,
-                        cstring_new(s));
-                }
+                            unsafe { elm::keyboard_popup_show(
+                                    con.keyboard,
+                                    k.eo,
+                                    cstring_new(s));
+                            }
                         }
 
                     },
@@ -462,6 +462,8 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
 {
     let con : &mut Container = unsafe { mem::transmute(data) };
     con.touch[device as usize].down = false;
+
+    unsafe { elm::keyboard_popup_hide(con.keyboard);}
 
     for c in con.keys.iter_mut() {
         for k in c.iter_mut() {
@@ -499,6 +501,7 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     k.down = false;
                     //println!("found object {} ", k.name);
                     unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
+                    unsafe { elm::keyboard_popup_hide(con.keyboard);}
                     if k.name == "Shift_L" {
                          con.shift = false;
                         unsafe {
@@ -522,6 +525,11 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                         else {
                         unsafe {
                             elm::ecore_x_test_fake_key_press(cstring_new(s));
+                        }
+                        unsafe { elm::keyboard_popup_show(
+                                con.keyboard,
+                                k.eo,
+                                cstring_new(s));
                         }
                         }
 

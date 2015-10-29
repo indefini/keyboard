@@ -144,8 +144,10 @@ _smart_keyboard_add(Evas_Object *o)
 
    priv->rows = eina_array_new(6);
 
-   Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_TOOLTIP);
+   //Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_TOOLTIP);
+   Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_DOCK);
    evas_object_name_set(winpop, strdup("keypop"));
+   elm_win_raise(winpop);
   //elm_win_autodel_set(winpop, EINA_TRUE);
   //evas_object_smart_callback_add(win, "delete,request", _window_del, NULL);
 
@@ -568,12 +570,12 @@ void smart_keyboard_show_popup(
   evas_object_geometry_get(o, &x, &y, &w, &h);
 
   printf("ky : %d \n", ky);
-  evas_object_move(rect, x, ky + y - 100);
+  evas_object_move(rect, x, ky + y - priv->key_height*1.5f);
   evas_object_resize(rect, w, h);
   evas_object_show(rect);
 
   evas_object_text_text_set(text, name);
-  evas_object_move(text, kx + x, ky + y - 100);
+  //evas_object_move(text, kx + x, ky + y - 100);
   evas_object_show(text);
 }
 
@@ -634,6 +636,53 @@ _create_stack(Evas *evas)//, const struct opts *opts)
    evas_object_show(stack);
    return stack;
 }
+
+Evas_Object* edje_test(Evas* e, int width, int height)
+{
+   Evas_Object *edje;
+   edje = edje_object_add(e);
+   if (!edje){
+     EINA_LOG_CRIT("could not create edje object!");
+     return NULL;
+   }
+   if (!edje_object_file_set(edje, "layout.edj", "main")) {
+        int err = edje_object_load_error_get(edje);
+        const char *errmsg = edje_load_error_str(err);
+        EINA_LOG_ERR("could not load 'my_group' from .edj file: %s",
+                     errmsg);
+        evas_object_del(edje);
+        return NULL;
+   }
+   /*
+   if (!edje_object_part_text_set(edje, "text", text)) {
+     EINA_LOG_WARN("could not set the text. "
+           "Maybe part 'text' does not exist?");
+   }
+   */
+
+   //evas_object_move(edje, 0, 0);
+   //evas_object_resize(edje, 100, 100);
+
+   Evas_Coord minw, minh, maxw, maxh;
+   edje_edit_group_max_w_set(edje, width);
+   edje_edit_group_max_h_set(edje, height);
+
+   edje_object_size_max_get(edje, &maxw, &maxh);
+   edje_object_size_min_get(edje, &minw, &minh);
+   printf("edje max %d, %d \n", maxw, maxh);
+   if ((minw <= 0) && (minh <= 0))
+   edje_object_size_min_calc(edje, &minw, &minh);
+
+   evas_object_size_hint_max_set(edje, maxw, maxh);
+   evas_object_size_hint_min_set(edje, minw, minh);
+
+   evas_object_size_hint_align_set(edje, EVAS_HINT_FILL, EVAS_HINT_FILL);
+   evas_object_size_hint_weight_set(edje, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+
+   evas_object_show(edje);
+   return edje;
+}
+
 
 
 
