@@ -27,12 +27,12 @@ Key* key_new(float width_factor, Evas_Object* o, Evas_Object* txt)
 	return k;
 }
 
-Eo* text_new(Evas* e)
+Eo* text_new(Evas* e, int r, int g, int b, int size)
 {
   Evas_Object* t = evas_object_text_add(e);
   evas_object_text_style_set(t, EVAS_TEXT_STYLE_PLAIN);
-  evas_object_color_set(t, 200, 200, 200, 255);
-  evas_object_text_font_set(t, "Ubuntu", 10);
+  evas_object_color_set(t, r, g, b, 255);
+  evas_object_text_font_set(t, "Ubuntu", size);
   return t;
 }
 
@@ -184,15 +184,16 @@ _smart_keyboard_add(Evas_Object *o)
    Eo* rect = evas_object_rectangle_add(ew);
    evas_object_show(rect);
    evas_object_color_set(rect, 180, 180, 180, 255);
-   Eo* t = text_new(ew);
+   Eo* t = text_new(ew, 10,10, 10, 30);
    evas_object_raise(t);
    evas_object_show(t);
    evas_object_text_text_set(t, "test");
   evas_object_size_hint_weight_set(rect, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   elm_win_resize_object_add(winpop, rect);
 
-  evas_object_size_hint_weight_set(t, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-  elm_win_resize_object_add(winpop, t);
+  //evas_object_size_hint_weight_set(t, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+  evas_object_size_hint_align_set(t, 0.5, 0.5);
+  //elm_win_resize_object_add(winpop, t);
 
    Popup* pp = calloc(1, sizeof *pp);
    pp->object = winpop;//rect;
@@ -441,7 +442,7 @@ smart_keyboard_key_add(
   evas_object_show(rect);
   evas_object_smart_member_add(rect, keyboard);
 
-  Eo* t = text_new(e);
+  Eo* t = text_new(e, 200, 200, 200, 10);
   evas_object_text_text_set(t, keyname);
   evas_object_raise(t);
   evas_object_show(t);
@@ -576,6 +577,8 @@ void smart_keyboard_show_popup(
 
   evas_object_text_text_set(text, name);
   //evas_object_move(text, kx + x, ky + y - 100);
+  evas_object_move(text, w/2, h/2);
+  //evas_object_move(text, 50, 40);
   evas_object_show(text);
 }
 

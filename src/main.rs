@@ -42,6 +42,7 @@ pub struct Container
     keys : Vec<Vec<Key>>,
     touch : [Touch;10],
     shift : bool,
+    ctrl : bool,
     keyboard : *mut elm::Keyboard
 }
 
@@ -167,6 +168,7 @@ fn main() {
         keys : Vec::new(),
         touch : [Touch {x:0, y:0, down:false}; 10],
         shift : false,
+        ctrl : false,
         keyboard : keyboard
     };
 
@@ -429,6 +431,12 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                                 elm::ecore_x_test_fake_key_down(cstring_new(s));
                             }
                         }
+                        else if s == "Control_L" && !con.ctrl {
+                            con.ctrl = true;
+                            unsafe {
+                                elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
+                        }
                         else if s == "BackSpace" {
                             unsafe {
                              elm::ecore_x_test_fake_key_down(cstring_new(s));
@@ -474,6 +482,12 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                      elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
                      }
                 }
+                else if k.name == "Control_L" {
+                     con.ctrl = false;
+                    unsafe {
+                     elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+                     }
+                }
                 else if k.name == "BackSpace" {
                     unsafe {
                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
@@ -508,6 +522,12 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                          elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
                         }
                     }
+                    else if k.name == "Control_L" {
+                         con.ctrl = false;
+                        unsafe {
+                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+                        }
+                    }
                 }
             }
             else if false && unsafe {elm::is_point_inside(k.eo, x, y)} {
@@ -518,6 +538,12 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     KeyKind::Normal(ref s) => {
                         if s == "Shift_L" && !con.shift {
                             con.shift = true;
+                            unsafe {
+                             elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
+                        }
+                        else if s == "Control_L" && !con.ctrl {
+                            con.ctrl = true;
                             unsafe {
                              elm::ecore_x_test_fake_key_down(cstring_new(s));
                             }
