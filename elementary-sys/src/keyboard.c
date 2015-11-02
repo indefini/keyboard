@@ -146,6 +146,7 @@ _smart_keyboard_add(Evas_Object *o)
 
    //Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_TOOLTIP);
    Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_DOCK);
+  elm_win_override_set(winpop, EINA_TRUE);
    evas_object_name_set(winpop, strdup("keypop"));
    elm_win_raise(winpop);
   //elm_win_autodel_set(winpop, EINA_TRUE);
