@@ -27,13 +27,43 @@ Key* key_new(float width_factor, Evas_Object* o, Evas_Object* txt)
 	return k;
 }
 
+static void
+_text_init(Eo* text)
+{
+  Evas_Textblock_Style* tb = evas_textblock_style_new();
+  evas_object_textblock_style_set(text, tb);
+
+   char buf[2000];
+   snprintf(buf,
+         2000,
+         "DEFAULT='font=Sans font_size=26 color=#000 wrap=%s text_class=entry'"
+         "br='\n'"
+         "ps='ps'"
+         "tab='\t'",
+         "word");
+   //evas_textblock_style_set(tb, buf);
+   evas_textblock_style_set(tb, 
+         "DEFAULT='font=Ubuntu font_size=26 color=#000'"
+         );
+   evas_object_textblock_text_markup_set(text, "yo");
+}
+
+
+
 Eo* text_new(Evas* e, int r, int g, int b, int size)
 {
+  /*
   Evas_Object* t = evas_object_text_add(e);
   evas_object_text_style_set(t, EVAS_TEXT_STYLE_PLAIN);
   evas_object_color_set(t, r, g, b, 255);
   evas_object_text_font_set(t, "Ubuntu", size);
   return t;
+  */
+
+
+   Eo* text = evas_object_textblock_add(e);
+   _text_init(text);
+   return text;
 }
 
 static const Evas_Smart_Cb_Description _smart_callbacks[] =
@@ -121,6 +151,7 @@ EVAS_SMART_SUBCLASS_NEW("Smart_Keyboard", _smart_keyboard,
                         Evas_Smart_Class, Evas_Smart_Class,
                         evas_object_smart_clipped_class_get, _smart_callbacks);
 
+
 static void
 _smart_keyboard_add(Evas_Object *o)
 {
@@ -188,7 +219,7 @@ _smart_keyboard_add(Evas_Object *o)
    Eo* t = text_new(ew, 10,10, 10, 30);
    evas_object_raise(t);
    evas_object_show(t);
-   evas_object_text_text_set(t, "test");
+   //evas_object_text_text_set(t, "test");
   evas_object_size_hint_weight_set(rect, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   elm_win_resize_object_add(winpop, rect);
 
@@ -444,7 +475,8 @@ smart_keyboard_key_add(
   evas_object_smart_member_add(rect, keyboard);
 
   Eo* t = text_new(e, 200, 200, 200, 10);
-  evas_object_text_text_set(t, keyname);
+  //evas_object_text_text_set(t, keyname);
+   evas_object_textblock_text_markup_set(t, keyname);
   evas_object_raise(t);
   evas_object_show(t);
 
@@ -570,15 +602,24 @@ void smart_keyboard_show_popup(
 
   Evas_Coord x, y, w, h;
   evas_object_geometry_get(o, &x, &y, &w, &h);
+  printf("ooooo : %d, %d, %d, %d \n",x, y, w, h);
+
+  Evas_Coord rx, ry, rw, rh;
+  evas_object_geometry_get(o, &rx, &ry, &rw, &rh);
+  printf("rrrrrr : %d, %d, %d, %d \n",rx, ry, rw, rh);
 
   printf("ky : %d \n", ky);
   evas_object_move(rect, x, ky + y - priv->key_height*1.5f);
   evas_object_resize(rect, w, h);
   evas_object_show(rect);
 
-  evas_object_text_text_set(text, name);
+  //evas_object_text_text_set(text, name);
+   evas_object_textblock_text_markup_set(text, name);
+  Evas_Coord tx, ty, tw, th;
+  evas_object_geometry_get(text, &tx, &ty, &tw, &th);
   //evas_object_move(text, kx + x, ky + y - 100);
-  evas_object_move(text, w/2, h/2);
+  printf("yep txxxx : %d, %d, %d, %d \n",tx, ty, tw, th);
+  evas_object_move(text, w/2 - tw/2, h/2 - th/2);
   //evas_object_move(text, 50, 40);
   evas_object_show(text);
 }
