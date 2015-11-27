@@ -27,13 +27,43 @@ Key* key_new(float width_factor, Evas_Object* o, Evas_Object* txt)
 	return k;
 }
 
+static void
+_text_init(Eo* text, const char* wrap)
+{
+  Evas_Textblock_Style* tb = evas_textblock_style_new();
+
+  /*
+   char buf[2000];
+   snprintf(buf,
+         2000,
+         "DEFAULT='font=Sans font_size=26 color=#000 wrap=%s text_class=entry'"
+         "br='\n'"
+         "ps='ps'"
+         "tab='\t'",
+         wrap);
+   evas_textblock_style_set(tb, buf);
+         */
+   evas_textblock_style_set(tb, 
+         "DEFAULT='font=Ubuntu font_size=16 color=#000 align=center valign=center'"
+         );
+   evas_object_textblock_text_markup_set(text, "yo");
+  evas_object_textblock_style_set(text, tb);
+}
+
+
+
 Eo* text_new(Evas* e, int r, int g, int b, int size)
 {
   Evas_Object* t = evas_object_text_add(e);
   evas_object_text_style_set(t, EVAS_TEXT_STYLE_PLAIN);
   evas_object_color_set(t, r, g, b, 255);
-  evas_object_text_font_set(t, "Ubuntu", size);
+  evas_object_text_font_set(t, "Ubuntu Monospace", size);
   return t;
+
+
+   Eo* text = evas_object_textblock_add(e);
+   _text_init(text, "word");
+   return text;
 }
 
 static const Evas_Smart_Cb_Description _smart_callbacks[] =
@@ -121,6 +151,7 @@ EVAS_SMART_SUBCLASS_NEW("Smart_Keyboard", _smart_keyboard,
                         Evas_Smart_Class, Evas_Smart_Class,
                         evas_object_smart_clipped_class_get, _smart_callbacks);
 
+
 static void
 _smart_keyboard_add(Evas_Object *o)
 {
@@ -188,7 +219,7 @@ _smart_keyboard_add(Evas_Object *o)
    Eo* t = text_new(ew, 10,10, 10, 30);
    evas_object_raise(t);
    evas_object_show(t);
-   evas_object_text_text_set(t, "test");
+   //evas_object_text_text_set(t, "test");
   evas_object_size_hint_weight_set(rect, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
   elm_win_resize_object_add(winpop, rect);
 
@@ -376,6 +407,7 @@ _smart_keyboard_calculate(Evas_Object *o)
             if (col->object) {
         	evas_object_move(col->object, x + px, y + py);
         	evas_object_resize(col->object, ww, height);
+        	evas_object_resize(col->text, ww, height);
             }
 
 			printf("%d,,,px before : %d \n", j, px);
@@ -444,7 +476,9 @@ smart_keyboard_key_add(
   evas_object_smart_member_add(rect, keyboard);
 
   Eo* t = text_new(e, 200, 200, 200, 10);
+  evas_object_pass_events_set(t, EINA_TRUE);
   evas_object_text_text_set(t, keyname);
+  // evas_object_textblock_text_markup_set(t, keyname);
   evas_object_raise(t);
   evas_object_show(t);
 
@@ -554,6 +588,7 @@ void smart_keyboard_size_get(
 
 }
 
+static Eo* _sr = NULL;
 
 void smart_keyboard_show_popup(
       Evas_Object* k,
@@ -570,6 +605,11 @@ void smart_keyboard_show_popup(
 
   Evas_Coord x, y, w, h;
   evas_object_geometry_get(o, &x, &y, &w, &h);
+  printf("ooooo : %d, %d, %d, %d \n",x, y, w, h);
+
+  Evas_Coord rx, ry, rw, rh;
+  evas_object_geometry_get(o, &rx, &ry, &rw, &rh);
+  printf("rrrrrr : %d, %d, %d, %d \n",rx, ry, rw, rh);
 
   printf("ky : %d \n", ky);
   evas_object_move(rect, x, ky + y - priv->key_height*1.5f);
@@ -577,10 +617,29 @@ void smart_keyboard_show_popup(
   evas_object_show(rect);
 
   evas_object_text_text_set(text, name);
+   //evas_object_textblock_text_markup_set(text, name);
+  Evas_Coord tx, ty, tw, th;
+  evas_object_geometry_get(text, &tx, &ty, &tw, &th);
   //evas_object_move(text, kx + x, ky + y - 100);
-  evas_object_move(text, w/2, h/2);
+  printf("yep txxxx : %d, %d, %d, %d \n",tx, ty, tw, th);
+  //evas_object_move(text, w/2 - tw/2, h/2 - th/2);
+  //TODO why do we need this offset... check testing at the end of the function
+  int offsety = 4; 
+  int offsetx = 1;
+  evas_object_move(text, w/2 -tw/2 - offsetx, h/2 - th/2 - offsety);// -th/2);
+  //evas_object_resize(text, w, size);
   //evas_object_move(text, 50, 40);
   evas_object_show(text);
+
+  /* For testing
+  evas_object_geometry_get(text, &tx, &ty, &tw, &th);
+  if (!_sr) {
+    _sr = evas_object_rectangle_add(evas_object_evas_get(text));
+    evas_object_show(_sr);
+    evas_object_color_set(_sr, 155, 0, 0, 155);
+  }
+  evas_object_geometry_set(_sr, tx, ty, tw, th);
+  */
 }
 
 void smart_keyboard_hide_popup(
