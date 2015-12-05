@@ -13,9 +13,37 @@ const KEY_Y_MM : f32 = 17f32;
 const KEYSPACE_X_MM : f32 = 0.8f32;
 const KEYSPACE_Y_MM : f32 = 0.8f32;
 
+pub KeySpecial
+{
+    Esc,
+    Tab,
+    Caps,
+    Backspace,
+    Enter,
+}
+
+pub KeyMove
+{
+    Up,
+    Down,
+    Left,
+    Right,
+
+    PageUp,
+    PageDown
+}
+
+pub KeyModifier
+{
+    Shift,
+    Control,
+    Alt,
+}
+
 pub enum KeyKind
 {
     Normal(String),
+    Modifier(String),
     Func(elm::RustCb),
     //Modifier(String)
 }
@@ -423,7 +451,7 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.kind {
-                    KeyKind::Normal(ref s) => {
+                    KeyKind::Normal(ref s) | KeyKind::Modifier(ref s) => {
                         //con.handle_normal_key(s);
                         if s == "Shift_L" && !con.shift {
                             con.shift = true;
@@ -535,7 +563,7 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.kind {
-                    KeyKind::Normal(ref s) => {
+                    KeyKind::Normal(ref s) | KeyKind::Modifier(ref s) => {
                         if s == "Shift_L" && !con.shift {
                             con.shift = true;
                             unsafe {

@@ -9,6 +9,7 @@ Now
 - autohide after tapping entry.
 
 Later
+- detect rotation/screen size in e with the event E_EVENT_RANDR_CHANGE (grep e src)
 - add -/+ button to extend or reduce functionality.
 - japanese support
 - korean support
