@@ -27,31 +27,6 @@ Key* key_new(float width_factor, Evas_Object* o, Evas_Object* txt)
 	return k;
 }
 
-static void
-_text_init(Eo* text, const char* wrap)
-{
-  Evas_Textblock_Style* tb = evas_textblock_style_new();
-
-  /*
-   char buf[2000];
-   snprintf(buf,
-         2000,
-         "DEFAULT='font=Sans font_size=26 color=#000 wrap=%s text_class=entry'"
-         "br='\n'"
-         "ps='ps'"
-         "tab='\t'",
-         wrap);
-   evas_textblock_style_set(tb, buf);
-         */
-   evas_textblock_style_set(tb, 
-         "DEFAULT='font=Ubuntu font_size=16 color=#000 align=center valign=center'"
-         );
-   evas_object_textblock_text_markup_set(text, "yo");
-  evas_object_textblock_style_set(text, tb);
-}
-
-
-
 Eo* text_new(Evas* e, int r, int g, int b, int size)
 {
   Evas_Object* t = evas_object_text_add(e);
@@ -59,11 +34,6 @@ Eo* text_new(Evas* e, int r, int g, int b, int size)
   evas_object_color_set(t, r, g, b, 255);
   evas_object_text_font_set(t, "Ubuntu Monospace", size);
   return t;
-
-
-   Eo* text = evas_object_textblock_add(e);
-   _text_init(text, "word");
-   return text;
 }
 
 static const Evas_Smart_Cb_Description _smart_callbacks[] =
@@ -73,11 +43,7 @@ static const Evas_Smart_Cb_Description _smart_callbacks[] =
 };
 
 typedef struct _Smart_Keyboard Smart_Keyboard;
-/*
- * This structure augments clipped smart object's instance data,
- * providing extra members required by our example smart object's
- * implementation.
- */
+
 struct _Smart_Keyboard
 {
    Evas_Object_Smart_Clipped_Data base;
@@ -258,164 +224,165 @@ _smart_keyboard_resize(Evas_Object *o,
 static void
 _smart_keyboard_calculate(Evas_Object *o)
 {
-   Evas_Coord x, y, w, h;
+  Evas_Coord x, y, w, h;
 
-   Smart_Keyboard * priv = evas_object_smart_data_get(o);
-   if (!priv) return;
+  Smart_Keyboard * priv = evas_object_smart_data_get(o);
+  if (!priv) return;
 
-   evas_object_geometry_get(o, &x, &y, &w, &h);
+  evas_object_geometry_get(o, &x, &y, &w, &h);
 
-   printf("recalculate to %d, %d, %d, %d \n", x, y, w, h);
+  printf("recalculate to %d, %d, %d, %d \n", x, y, w, h);
 
-   evas_object_resize(priv->border, w, h);
-   evas_object_move(priv->border, x, y);
+  evas_object_resize(priv->border, w, h);
+  evas_object_move(priv->border, x, y);
 
-   int pxo = priv->paddingx;
-   int pyo = priv->paddingy;;
-   int px = pxo;
-   printf("px, pxo ------------ : %d,%d \n", px, pxo);
-   int py = pyo;
+  int pxo = priv->paddingx;
+  int pyo = priv->paddingy;;
+  int px = pxo;
+  printf("px, pxo ------------ : %d,%d \n", px, pxo);
+  int py = pyo;
 
-   unsigned int mx = priv->key_space_maxx;
-   unsigned int my = priv->key_space_maxy;
+  unsigned int mx = priv->key_space_maxx;
+  unsigned int my = priv->key_space_maxy;
 
-   //float ix = get_ideal_width(priv);
-   float ix = priv->ideal_width;
+  //float ix = get_ideal_width(priv);
+  float ix = priv->ideal_width;
 
-   //float width = 20.0f;
-   int width = 20;
-   float height = 15.0f;
+  //float width = 20.0f;
+  int width = 20;
+  float height = 15.0f;
 
-   if (w > 2* priv->paddingx) {
-   	w -= 2* priv->paddingx;
-   }
+  if (w > 2* priv->paddingx) {
+    w -= 2* priv->paddingx;
+  }
 
-   printf("w is : %d \n", w);
+  printf("w is : %d \n", w);
 
-   Eina_Array* longrow = eina_array_data_get(priv->rows,priv->ideal_index);
-   if (ix <= w) {
-	   width = priv->key_width;
-	   mx = priv->key_space_maxx;
-   }
-   else {
-	   float ratio = ((float)w)/ix;
-	   printf("ratio : %f \n", ratio);
-	   mx = priv->key_space_maxx * ratio;
-	   if (mx < priv->key_space_minx) {
-		   mx = priv->key_space_minx;
-	   	printf("minx is  : %d, %d \n", priv->key_space_minx, mx);
-	   }
-	   int keys_count = eina_array_count(longrow);
-	   int left_for_keys = w - (priv->more + keys_count -1) * mx;
-	   ////float yop = (float) left_for_keys/ (float)keys_count*priv->ideal_factor_width;
-	   ////width = ((float) left_for_keys)/priv->ideal_factor_width;
-	   width = left_for_keys/priv->ideal_factor_width;
-	   //int multiplier = left_for_keys/priv->ideal_factor_width/mx;
-	   //width = mx * multiplier;
+  Eina_Array* longrow = eina_array_data_get(priv->rows,priv->ideal_index);
+  if (ix <= w) {
+    width = priv->key_width;
+    mx = priv->key_space_maxx;
+  }
+  else {
+    float ratio = ((float)w)/ix;
+    printf("ratio : %f \n", ratio);
+    mx = priv->key_space_maxx * ratio;
+    if (mx < priv->key_space_minx) {
+      mx = priv->key_space_minx;
+      printf("minx is  : %d, %d \n", priv->key_space_minx, mx);
+    }
+    int keys_count = eina_array_count(longrow);
+    int left_for_keys = w - (priv->more + keys_count -1) * mx;
+    ////float yop = (float) left_for_keys/ (float)keys_count*priv->ideal_factor_width;
+    ////width = ((float) left_for_keys)/priv->ideal_factor_width;
+    width = left_for_keys/priv->ideal_factor_width;
+    //int multiplier = left_for_keys/priv->ideal_factor_width/mx;
+    //width = mx * multiplier;
 
-   }
+  }
 
-   /*
-   float iy = get_ideal_height(priv);
-   if (iy <= h) {
-	   height = priv->key_height;
-	   my = priv->key_space_maxy;
-	   printf("height, my : %f , %d\n", height,my);
-   }
-   else
-   {
-	   //float ratio = ((float)h)/iy;
-	   printf("ratio : %f \n", ratio);
-	   my = priv->key_space_maxy * ratio;
-	   if (my < priv->key_space_miny) {
-		   my = priv->key_space_miny;
-	   	printf("miny is  : %d, %d \n", priv->key_space_miny, my);
-	   }
-	   int rows_count = eina_array_count(priv->rows);
-	   int left_for_keys = h - (rows_count -1) * my;
-	   height = ((float) left_for_keys)/rows_count;
-	   int hh = ((int)height) * rows_count + (rowsj_count-1) * my;;
-   	   py = ((int) priv->paddingy) + ((int) ( ((int)h - (int) hh)/2));
-   }
-   */
+  /*
+     float iy = get_ideal_height(priv);
+     if (iy <= h) {
+     height = priv->key_height;
+     my = priv->key_space_maxy;
+     printf("height, my : %f , %d\n", height,my);
+     }
+     else
+     {
+  //float ratio = ((float)h)/iy;
+  printf("ratio : %f \n", ratio);
+  my = priv->key_space_maxy * ratio;
+  if (my < priv->key_space_miny) {
+  my = priv->key_space_miny;
+  printf("miny is  : %d, %d \n", priv->key_space_miny, my);
+  }
+  int rows_count = eina_array_count(priv->rows);
+  int left_for_keys = h - (rows_count -1) * my;
+  height = ((float) left_for_keys)/rows_count;
+  int hh = ((int)height) * rows_count + (rowsj_count-1) * my;;
+  py = ((int) priv->paddingy) + ((int) ( ((int)h - (int) hh)/2));
+  }
+  */
 
-   float ratio = ((float) width) / ((float) priv->key_width);
-   height = priv->key_height *ratio;
-   my = priv->key_space_maxy *ratio;
-   if (my < priv->key_space_miny) {
-		   my = priv->key_space_miny;
-   }
-	   int rows_count = eina_array_count(priv->rows);
-   float iy = height*rows_count + my * (rows_count -1);
+  float ratio = ((float) width) / ((float) priv->key_width);
+  height = priv->key_height *ratio;
+  my = priv->key_space_maxy *ratio;
+  if (my < priv->key_space_miny) {
+    my = priv->key_space_miny;
+  }
+  my = mx; //TMP Test
+  int rows_count = eina_array_count(priv->rows);
+  float iy = height*rows_count + my * (rows_count -1);
 
-   if (iy > h) {
-       //TODO
-       py = 0;
-   }
-   else {
-       py = (h-iy)/2.0f;
-   }
-
-
-
-
-   	Key* col;
-   	Eina_Array_Iterator iterator_col;
-   	unsigned int j;
-   	unsigned int test = 0;
-   	EINA_ARRAY_ITER_NEXT(longrow, j, col, iterator_col) {
-		int ww = width* col->width_factor;// + 0.5f;
-		test += ww + mx;
-	}
-   	test -= mx;
-
-   pxo = ((int) priv->paddingx) + ((int) ( ((int)w - (int) test)/2));
+  if (iy > h) {
+    //TODO
+    py = 0;
+  }
+  else {
+    py = (h-iy)/2.0f;
+  }
 
 
 
-   Eina_Array *row;
-   Eina_Array_Iterator iterator;
-   unsigned int i;
 
-   EINA_ARRAY_ITER_NEXT(priv->rows, i, row, iterator) {
+  Key* col;
+  Eina_Array_Iterator iterator_col;
+  unsigned int j;
+  unsigned int test = 0;
+  EINA_ARRAY_ITER_NEXT(longrow, j, col, iterator_col) {
+    int ww = width* col->width_factor;// + 0.5f;
+    test += ww + mx;
+  }
+  test -= mx;
 
-   		Key* col;
-   		Eina_Array_Iterator iterator_col;
-   		unsigned int j;
-		px = pxo;
-   		EINA_ARRAY_ITER_NEXT(row, j, col, iterator_col) {
-            if (col->text) {
-        	evas_object_move(col->text, x + px, y + py);
-            }
-            int more_space = ((int) col->width_factor) -1;
-            //int more_space = 0;
-            if (col->width_factor - ((int) col->width_factor)  > 0) {
-                more_space += 1;
-            }
-            if (j== 0 ) {
-                more_space = 0;
-            }
+  pxo = ((int) priv->paddingx) + ((int) ( ((int)w - (int) test)/2));
 
-            //if (j== 0 || more_space < 0) {
-            if (more_space < 0) {
-                more_space = 0;
-            }
-            printf("more space for %f, %d ¥n", col->width_factor, more_space);
 
-			//int ww = width* col->width_factor + ( ((int) col->width_factor) -1)*mx;;
-			int ww = width* col->width_factor + more_space*mx;
-            if (col->object) {
-        	evas_object_move(col->object, x + px, y + py);
-        	evas_object_resize(col->object, ww, height);
-        	evas_object_resize(col->text, ww, height);
-            }
 
-			printf("%d,,,px before : %d \n", j, px);
-			px += ww + (int) mx;
-		}
-		printf("px after row is : %d \n", px);
-		py += height + my;
-   }
+  Eina_Array *row;
+  Eina_Array_Iterator iterator;
+  unsigned int i;
+
+  EINA_ARRAY_ITER_NEXT(priv->rows, i, row, iterator) {
+
+    Key* col;
+    Eina_Array_Iterator iterator_col;
+    unsigned int j;
+    px = pxo;
+    EINA_ARRAY_ITER_NEXT(row, j, col, iterator_col) {
+      if (col->text) {
+        evas_object_move(col->text, x + px, y + py);
+      }
+      int more_space = ((int) col->width_factor) -1;
+      //int more_space = 0;
+      if (col->width_factor - ((int) col->width_factor)  > 0) {
+        more_space += 1;
+      }
+      if (j== 0 ) {
+        more_space = 0;
+      }
+
+      //if (j== 0 || more_space < 0) {
+      if (more_space < 0) {
+        more_space = 0;
+      }
+      printf("more space for %f, %d ¥n", col->width_factor, more_space);
+
+      //int ww = width* col->width_factor + ( ((int) col->width_factor) -1)*mx;;
+      int ww = width* col->width_factor + more_space*mx;
+      if (col->object) {
+        evas_object_move(col->object, x + px, y + py);
+        evas_object_resize(col->object, ww, height);
+        evas_object_resize(col->text, ww, height);
+      }
+
+      printf("%d,,,px before : %d \n", j, px);
+      px += ww + (int) mx;
+    }
+    printf("px after row is : %d \n", px);
+    py += height + my;
+    }
 }
 
 static void
