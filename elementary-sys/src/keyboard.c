@@ -579,7 +579,7 @@ void smart_keyboard_show_popup(
   printf("rrrrrr : %d, %d, %d, %d \n",rx, ry, rw, rh);
 
   printf("ky : %d \n", ky);
-  evas_object_move(rect, x, ky + y - priv->key_height*1.5f);
+  evas_object_move(rect, kx + x, ky + y - h*1.5f);
   evas_object_resize(rect, w, h);
   evas_object_show(rect);
 
