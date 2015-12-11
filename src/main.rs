@@ -13,16 +13,19 @@ const KEY_Y_MM : f32 = 17f32;
 const KEYSPACE_X_MM : f32 = 0.8f32;
 const KEYSPACE_Y_MM : f32 = 0.8f32;
 
-pub KeySpecial
+#[derive(Clone)]
+enum Special
 {
     Esc,
     Tab,
     Caps,
     Backspace,
     Enter,
+    Space,
 }
 
-pub KeyMove
+#[derive(Clone)]
+enum Move
 {
     Up,
     Down,
@@ -33,7 +36,8 @@ pub KeyMove
     PageDown
 }
 
-pub KeyModifier
+#[derive(Clone)]
+enum Modifier
 {
     Shift,
     Control,
@@ -48,6 +52,96 @@ pub enum KeyKind
     //Modifier(String)
 }
 
+#[derive(Clone)]
+enum KeyT
+{
+    //Normal(String),
+    Modifier(Modifier),
+    Func(elm::RustCb),
+    Special(Special),
+    //Modifier(String)
+    Move(Move),
+    Ch(Ch),
+    Empty
+}
+
+#[derive(Clone)]
+struct KeyDef
+{
+    kind : KeyT,
+    width : f32,
+    height : f32,
+    name : String
+}
+
+impl KeyDef{
+    fn new(kind : KeyT, name : &str ) -> KeyDef
+    {
+        KeyDef {
+            kind : kind,
+            width : 1f32,
+            height : 1f32,
+            name : String::from(name)
+        }
+    }
+
+    fn with_size(kind : KeyT , name : &str, w : f32, h : f32)  -> KeyDef
+    {
+        KeyDef {
+            kind : kind,
+            width : w,
+            height : h,
+            name : String::from(name)
+        }
+    }
+}
+
+#[derive(Clone)]
+struct Ch
+{
+    click : String,
+    shift : Option<String>,
+    long : Vec<String>,
+}
+
+impl Ch
+{
+    fn new(c : &str) -> Ch
+    {
+        Ch {
+            click : String::from(c),
+            shift : None,
+            long : Vec::new()
+        }
+    }
+
+    fn with_shift(c : &str, shift : &str) -> Ch
+    {
+        Ch {
+            click : String::from(c),
+            shift : Some(String::from(shift)),
+            long : Vec::new()
+        }
+    }
+
+    fn with_shift_long(
+        c : &str,
+        shift : Option<&str>,
+        long : Vec<String>,
+        ) -> Ch
+    {
+        Ch {
+            click : String::from(c),
+            shift : match shift {
+                    Some(s) => Some(String::from(s)),
+                    None => None
+            },
+            long : long
+        }
+    }
+}
+
+
 pub struct Key
 {
     eo : *mut elm::Evas_Object,
@@ -56,6 +150,16 @@ pub struct Key
     down : bool,
     device : i32
 }
+
+pub struct Key2
+{
+    eo : *mut elm::Evas_Object,
+    //name : String,
+    def : KeyDef,
+    down : bool,
+    device : i32
+}
+
 
 #[derive(Copy, Clone)]
 pub struct Touch
@@ -67,7 +171,7 @@ pub struct Touch
 
 pub struct Container
 {
-    keys : Vec<Vec<Key>>,
+    keys : Vec<Vec<Key2>>,
     touch : [Touch;10],
     shift : bool,
     ctrl : bool,
@@ -94,14 +198,14 @@ pub struct Config
 }
 
 fn get_size(
-        rows :&Vec<Vec<&str>>,
-        //config : &Config,
-        screenw : usize,
-        screenh : usize,
-        dpix : usize,
-        dpiy : usize
-        ) -> (usize, usize)
-    {
+    rows :&Vec<Vec<&str>>,
+    //config : &Config,
+    screenw : usize,
+    screenh : usize,
+    dpix : usize,
+    dpiy : usize
+    ) -> (usize, usize)
+{
     let mut max_col = 0f32;
     for r in  rows.iter() {
         //max_col = cmp::max(max_col, get_real_len(r));
@@ -136,7 +240,53 @@ fn get_size(
     (
         width_px, height_px
     )
+}
+
+fn get_size2(
+    rows :&Vec<Vec<KeyDef>>,
+    //config : &Config,
+    screenw : usize,
+    screenh : usize,
+    dpix : usize,
+    dpiy : usize
+    ) -> (usize, usize)
+{
+    let mut max_col = 0f32;
+    for r in  rows.iter() {
+        //max_col = cmp::max(max_col, get_real_len(r));
+        max_col = max_col.max(get_real_len2(r));
     }
+
+    let rows_num = rows.len() as f32;
+
+    let width_mm = max_col * KEY_X_MM + (max_col - 1f32) * KEYSPACE_X_MM;
+    let height_mm = rows_num * KEY_Y_MM + (rows_num - 1f32) * KEYSPACE_Y_MM;
+
+    let width_px = mm_to_px(width_mm, dpix);
+    let height_px = mm_to_px(height_mm, dpiy);
+
+    if width_px <= screenw {
+        if height_px <= screenh {
+            return (width_px, height_px);
+        }
+        else {
+            //TODO recalc height
+            return (width_px, height_px);
+        }
+    }
+    else {
+        let ratio = screenw as f32 / width_px  as f32;
+        return (screenw, (height_px as f32 * ratio) as usize);
+
+    }
+
+
+
+    (
+        width_px, height_px
+    )
+}
+
 
 /*
 impl Container
@@ -179,6 +329,105 @@ fn rowsnum<'a>() -> Vec<Vec<&'a str>>
     vec![rownum, row0, row1, row2, row3]
 }
 
+macro_rules! ch {
+    ($l:expr) => (KeyDef::new(KeyT::Ch(Ch::new($l)),$l));
+    ($l:expr, $shift:expr) => (KeyDef::new(KeyT::Ch(Ch::with_shift($l,$shift)),$l))
+}
+
+macro_rules! sp {
+    ($l:expr,$name:expr) => (KeyDef::new(KeyT::Special($l),$name));
+    ($l:expr,$name:expr, $w:expr) => (KeyDef::with_size(KeyT::Special($l),$name,$w,1f32));
+    ($l:expr,$name:expr, $w:expr, $h:expr) => (KeyDef::with_size(KeyT::Special($l),$name,$w,$h));
+}
+
+macro_rules! mov {
+    ($l:expr,$name:expr) => (KeyDef::new(KeyT::Move($l),$name));
+    ($l:expr,$name:expr, $w:expr) => (KeyDef::with_size(KeyT::Move($l),$name,$w,1f32));
+}
+
+macro_rules! modi {
+    ($l:expr,$name:expr) => (KeyDef::new(KeyT::Modifier($l),$name));
+    ($l:expr,$name:expr, $w:expr) => (KeyDef::with_size(KeyT::Modifier($l),$name,$w,1f32));
+}
+
+macro_rules! empty {
+    ($w:expr) => (KeyDef::with_size(KeyT::Empty,"",$w,1f32));
+}
+
+macro_rules! func {
+    ($f:expr,$name:expr) => (KeyDef::new(KeyT::Func($f),$name));
+}
+
+
+
+fn rows_test() -> Vec<Vec<KeyDef>>
+{
+    let row0 = vec![
+        sp!(Special::Esc, "Esc"),
+        ch!("q"),
+        ch!("w"),
+        ch!("e"),
+        ch!("r"),
+        ch!("t"),
+        ch!("y"),
+        ch!("u"),
+        ch!("i"),
+        ch!("o"),
+        ch!("p"),
+        ch!("@", "`"),
+        ch!("[", "{"),
+        sp!(Special::Backspace, "Back\nSpace", 1.3f32),
+    ];
+
+    let row1 = vec![
+        sp!(Special::Tab, "Tab", 1.3f32),
+        ch!("a"),
+        ch!("s"),
+        ch!("d"),
+        ch!("f"),
+        ch!("g"),
+        ch!("h"),
+        ch!("j"),
+        ch!("k"),
+        ch!("l"),
+        ch!(";", "+"),
+        ch!(":", "*"),
+        ch!("]", "]"),
+        sp!(Special::Enter, "Enter")
+    ];
+
+    let row2 = vec![
+        modi!(Modifier::Shift, "Shift", 1.6f32),
+        ch!("z"),
+        ch!("x"),
+        ch!("c"),
+        ch!("v"),
+        ch!("b"),
+        ch!("n"),
+        ch!("m"),
+        ch!(",", "<"),
+        ch!(".", ">"),
+        ch!("/", "?"),
+        ch!("\\", "_"),
+        mov!(Move::Up, "up")
+    ];
+
+    let row3 = vec![
+        modi!(Modifier::Control, "Ctrl", 1.6f32),
+        empty!(2f32),
+        sp!(Special::Space, "", 7f32),
+        empty!(1.4f32),
+        func!(reduce, "reduce"),
+        func!(close, "close"),
+        //mov!(Move::Left,"left"),
+        //mov!(Move::Down, "down"),
+        //mov!(Move::Right, "right"),
+    ];
+
+    vec![row0, row1, row2, row3]
+}
+
+
 fn main() {
     unsafe { elm::init() };
 
@@ -188,9 +437,11 @@ fn main() {
     let config = calc_config(dpix, dpiy);
 
     //let rows = rows4();
-    let rows = rowsnum();
+    //let rows = rowsnum();
 
-    let keyboard = create_keyboard(&rows, win);
+    let rows = rows_test();
+
+    let keyboard = create_keyboard2(&rows, win);
 
     let mut container = Container {
         keys : Vec::new(),
@@ -200,7 +451,7 @@ fn main() {
         keyboard : keyboard
     };
 
-    create_keys_bg(&rows, &mut container);
+    create_keys_bg2(&rows, &mut container);
 
     //create_keyboard_with_table_buttons(&rows);
 
@@ -255,6 +506,35 @@ fn calc_keyboard_size(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&V
 
 }
 
+fn calc_keyboard_size2(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&Vec<Vec<KeyDef>>)
+    -> (usize, usize, usize, usize, usize, usize)
+{
+    let mut max_col = 0f32;
+    for r in rows.iter() {
+        //max_col = cmp::max(max_col, get_real_len(r));
+        max_col = max_col.max(get_real_len2(r));
+    }
+
+    let rows_num = rows.len() as f32;
+
+    let width_mm = max_col * KEY_X_MM + (max_col - 1f32) * KEYSPACE_X_MM;
+    let height_mm = rows_num * KEY_Y_MM + (rows_num - 1f32) * KEYSPACE_Y_MM;
+
+    let width_px = mm_to_px(width_mm, dpix);
+    let height_px = mm_to_px(height_mm, dpiy);
+
+
+    (
+        width_px, height_px,
+        mm_to_px(KEY_X_MM, dpix),
+        mm_to_px(KEY_Y_MM, dpiy),
+        mm_to_px(KEYSPACE_X_MM, dpix),
+        mm_to_px(KEYSPACE_Y_MM, dpiy),
+     )
+
+}
+
+
 fn create_keyboard(
     rows : &Vec<Vec<&str>>,
     win : *const elm::Evas_Object)
@@ -276,6 +556,28 @@ fn create_keyboard(
     keyboard
 }
 
+fn create_keyboard2(
+    rows : &Vec<Vec<KeyDef>>,
+    win : *const elm::Evas_Object)
+    -> *mut elm::Keyboard
+{
+    let (dpix, dpiy, w, h) = elm::get_dpi_size(win);
+    println!("dpix, dpiy {}, {}", dpix, dpiy);
+    let (mut px, mut py, kx, ky, ksx, ksy) = calc_keyboard_size2(dpix, dpiy, w, h, rows);
+    //px = cmp::min(px, w);
+    //py = cmp::min(py, h);
+
+    let (sizex, sizey) = get_size2(rows, w, h, dpix, dpiy);
+    px = sizex;
+    py = sizey;
+
+    println!("px, py {}, {}, key space {}, {}", px, py, ksx, ksy);
+    let keyboard = unsafe {elm::keyboard_new(win, px as i32, py as i32, kx as i32, ky as i32, ksx as i32, ksy as i32)};
+
+    keyboard
+}
+
+
 fn create_keys_bg(
     rows : &Vec<Vec<&str>>,
     container : &mut Container,
@@ -289,6 +591,21 @@ fn create_keys_bg(
             mem::transmute(container))
     };
 }
+
+fn create_keys_bg2(
+    rows : &Vec<Vec<KeyDef>>,
+    container : &mut Container,
+    )
+{
+    create_keys2(rows, container);
+    unsafe {elm::keyboard_bg_add(
+            input_down,
+            input_up,
+            input_move,
+            mem::transmute(container))
+    };
+}
+
 
 fn create_keys(rows : &Vec<Vec<&str>>, container : &mut Container)
 {
@@ -399,10 +716,42 @@ fn create_keys(rows : &Vec<Vec<&str>>, container : &mut Container)
             }
         }
         row = row + 1;
+        //container.keys.push(col_keys);
+    }
+
+}
+
+fn create_keys2(rows : &Vec<Vec<KeyDef>>, container : &mut Container)
+{
+    let k = container.keyboard;
+    let mut row = 0;
+    for r in rows.iter() {
+
+        let mut col_keys = Vec::new();
+
+        for c in (*r).iter() {
+            let w = c.width;
+
+            let r = unsafe {elm::keyboard_rect_add(
+                    k,
+                    cstring_new(&*c.name),
+                    row,
+                    w)};
+
+            let key = Key2 {
+                eo : r,
+                def : (*c).clone(),
+                down : false,
+                device : 0
+            };
+            col_keys.push(key);
+        }
+        row = row + 1;
         container.keys.push(col_keys);
     }
 
 }
+
 
 fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
 {
@@ -450,6 +799,7 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                 k.down = true;
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
+                /*
                 match k.kind {
                     KeyKind::Normal(ref s) | KeyKind::Modifier(ref s) => {
                         //con.handle_normal_key(s);
@@ -488,6 +838,48 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                         }
                     }
                 }
+                */
+                match k.def.kind {
+                    KeyT::Ch(ref s) => {//| KeyKind::Modifier(ref s) => {
+                        //con.handle_normal_key(s);
+                        /*
+                        if s == "Shift_L" && !con.shift {
+                            con.shift = true;
+                            unsafe {
+                                elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
+                        }
+                        else if s == "Control_L" && !con.ctrl {
+                            con.ctrl = true;
+                            unsafe {
+                                elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
+                        }
+                        else if s == "BackSpace" {
+                            unsafe {
+                             elm::ecore_x_test_fake_key_down(cstring_new(s));
+                            }
+                        }
+                        else {
+                        */
+                            unsafe {
+                                elm::ecore_x_test_fake_key_press(cstring_new(&*s.click));
+                            }
+                            unsafe { elm::keyboard_popup_show(
+                                    con.keyboard,
+                                    k.eo,
+                                    cstring_new(&*k.def.name));
+                            }
+                        //}
+
+                    },
+                    KeyT::Func(ref cb) => {
+                        unsafe {
+                            cb(data);
+                        }
+                    },
+                    _ => {}
+                }
                 break;
             }
         }
@@ -504,6 +896,7 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
     for c in con.keys.iter_mut() {
         for k in c.iter_mut() {
             if k.down && unsafe {elm::is_point_inside(k.eo, x, y)} {
+                /*
                 if k.name == "Shift_L" {
                      con.shift = false;
                     unsafe {
@@ -521,6 +914,7 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
                     }
                 }
+                */
                 k.down = false;
                 //println!("found object {} ", k.name);
                 unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
@@ -544,6 +938,7 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     //println!("found object {} ", k.name);
                     unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
                     unsafe { elm::keyboard_popup_hide(con.keyboard);}
+                    /*
                     if k.name == "Shift_L" {
                          con.shift = false;
                         unsafe {
@@ -556,14 +951,16 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                          elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
                         }
                     }
+                    */
                 }
             }
             else if false && unsafe {elm::is_point_inside(k.eo, x, y)} {
                 k.down = true;
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
-                match k.kind {
-                    KeyKind::Normal(ref s) | KeyKind::Modifier(ref s) => {
+                match k.def.kind {
+                    KeyT::Ch(ref s) => {//| KeyKind::Modifier(ref s) => {
+                        /*
                         if s == "Shift_L" && !con.shift {
                             con.shift = true;
                             unsafe {
@@ -577,22 +974,24 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                             }
                         }
                         else {
+                        */
                         unsafe {
-                            elm::ecore_x_test_fake_key_press(cstring_new(s));
+                            elm::ecore_x_test_fake_key_press(cstring_new(&k.def.name));
                         }
                         unsafe { elm::keyboard_popup_show(
                                 con.keyboard,
                                 k.eo,
-                                cstring_new(s));
+                                cstring_new(&k.def.name));
                         }
-                        }
+                        //}
 
                     },
-                    KeyKind::Func(ref cb) => {
+                    KeyT::Func(ref cb) => {
                         unsafe {
                             cb(data);
                         }
-                    }
+                    },
+                    _ => {}
                 }
             }
         }
@@ -628,6 +1027,17 @@ fn get_real_len(v : &Vec<&str>) -> f32
 
     l
 }
+
+fn get_real_len2(v : &Vec<KeyDef>) -> f32
+{
+    let mut l = 0f32;
+    for c in v.iter() {
+        l += c.width;
+    }
+
+    l
+}
+
 
 fn mm_to_px(mm : f32, dpi : usize) -> usize
 {
