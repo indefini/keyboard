@@ -24,6 +24,23 @@ enum Special
     Space,
 }
 
+impl Special
+{
+    fn get_fake(&self) -> &str
+    {
+        match *self {
+            Special::Esc => "Escape",
+            Special::Tab => "Tab",
+            Special::Backspace => "BackSpace",
+            Special::Enter => "Return",
+            Special::Space => "space",
+            //Special::Shift => "Shift_L",
+            //Special::Control => "Control_L",
+            _ => ""
+        }
+    }
+}
+
 #[derive(Clone)]
 enum Move
 {
@@ -43,6 +60,19 @@ enum Modifier
     Control,
     Alt,
 }
+
+impl Modifier
+{
+    fn get_fake(&self) -> &str
+    {
+        match *self {
+            Modifier::Shift => "Shift_L",
+            Modifier::Control => "Control_L",
+            _ => ""
+        }
+    }
+}
+
 
 pub enum KeyKind
 {
@@ -1037,7 +1067,6 @@ fn get_real_len2(v : &Vec<KeyDef>) -> f32
 
     l
 }
-
 
 fn mm_to_px(mm : f32, dpi : usize) -> usize
 {
