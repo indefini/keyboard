@@ -190,6 +190,42 @@ pub struct Key2
     device : i32
 }
 
+impl Key2
+{
+    fn key_up(&mut self, con : &mut Container)
+    {
+        match self.def.kind {
+            KeyT::Special(ref s) => {
+                unsafe {
+                    elm::ecore_x_test_fake_key_up(cstring_new(s.get_fake()));
+                }
+            },
+            KeyT::Modifier(ref m) => {
+                match *m {
+                    Modifier::Shift => {
+                        con.shift = false;
+                    },
+                    Modifier::Control => {
+                        con.ctrl = false;
+                    },
+                    Modifier::Alt => {
+                        println!("todo");
+                    }
+                }
+                unsafe {
+                    elm::ecore_x_test_fake_key_up(cstring_new(m.get_fake()));
+                }
+            }
+            _ => {
+            }
+        }
+
+        self.down = false;
+        //println!("found object {} ", self.name);
+        unsafe { elm::evas_object_color_set(self.eo, 80, 80, 80, 255)};
+    }
+}
+
 
 #[derive(Copy, Clone)]
 pub struct Touch
@@ -228,51 +264,6 @@ pub struct Config
 }
 
 fn get_size(
-    rows :&Vec<Vec<&str>>,
-    //config : &Config,
-    screenw : usize,
-    screenh : usize,
-    dpix : usize,
-    dpiy : usize
-    ) -> (usize, usize)
-{
-    let mut max_col = 0f32;
-    for r in  rows.iter() {
-        //max_col = cmp::max(max_col, get_real_len(r));
-        max_col = max_col.max(get_real_len(r));
-    }
-
-    let rows_num = rows.len() as f32;
-
-    let width_mm = max_col * KEY_X_MM + (max_col - 1f32) * KEYSPACE_X_MM;
-    let height_mm = rows_num * KEY_Y_MM + (rows_num - 1f32) * KEYSPACE_Y_MM;
-
-    let width_px = mm_to_px(width_mm, dpix);
-    let height_px = mm_to_px(height_mm, dpiy);
-
-    if width_px <= screenw {
-        if height_px <= screenh {
-            return (width_px, height_px);
-        }
-        else {
-            //TODO recalc height
-            return (width_px, height_px);
-        }
-    }
-    else {
-        let ratio = screenw as f32 / width_px  as f32;
-        return (screenw, (height_px as f32 * ratio) as usize);
-
-    }
-
-
-
-    (
-        width_px, height_px
-    )
-}
-
-fn get_size2(
     rows :&Vec<Vec<KeyDef>>,
     //config : &Config,
     screenw : usize,
@@ -406,7 +397,7 @@ fn rows_test() -> Vec<Vec<KeyDef>>
         ch!("p"),
         ch!("@", "`"),
         ch!("[", "{"),
-        sp!(Special::Backspace, "Back\nSpace", 1.3f32),
+        sp!(Special::Backspace, "Backspace", 1.3f32),
     ];
 
     let row1 = vec![
@@ -471,7 +462,7 @@ fn main() {
 
     let rows = rows_test();
 
-    let keyboard = create_keyboard2(&rows, win);
+    let keyboard = create_keyboard(&rows, win);
 
     let mut container = Container {
         keys : Vec::new(),
@@ -481,7 +472,7 @@ fn main() {
         keyboard : keyboard
     };
 
-    create_keys_bg2(&rows, &mut container);
+    create_keys_bg(&rows, &mut container);
 
     //create_keyboard_with_table_buttons(&rows);
 
@@ -507,36 +498,7 @@ fn calc_config(dpix : usize, dpiy : usize) //, rows :&Vec<Vec<&str>>)
     }
 }
 
-
-fn calc_keyboard_size(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&Vec<Vec<&str>>)
-    -> (usize, usize, usize, usize, usize, usize)
-{
-    let mut max_col = 0f32;
-    for r in rows.iter() {
-        //max_col = cmp::max(max_col, get_real_len(r));
-        max_col = max_col.max(get_real_len(r));
-    }
-
-    let rows_num = rows.len() as f32;
-
-    let width_mm = max_col * KEY_X_MM + (max_col - 1f32) * KEYSPACE_X_MM;
-    let height_mm = rows_num * KEY_Y_MM + (rows_num - 1f32) * KEYSPACE_Y_MM;
-
-    let width_px = mm_to_px(width_mm, dpix);
-    let height_px = mm_to_px(height_mm, dpiy);
-
-
-    (
-        width_px, height_px,
-        mm_to_px(KEY_X_MM, dpix),
-        mm_to_px(KEY_Y_MM, dpiy),
-        mm_to_px(KEYSPACE_X_MM, dpix),
-        mm_to_px(KEYSPACE_Y_MM, dpiy),
-     )
-
-}
-
-fn calc_keyboard_size2(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&Vec<Vec<KeyDef>>)
+fn calc_keyboard_size(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&Vec<Vec<KeyDef>>)
     -> (usize, usize, usize, usize, usize, usize)
 {
     let mut max_col = 0f32;
@@ -564,9 +526,8 @@ fn calc_keyboard_size2(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&
 
 }
 
-
 fn create_keyboard(
-    rows : &Vec<Vec<&str>>,
+    rows : &Vec<Vec<KeyDef>>,
     win : *const elm::Evas_Object)
     -> *mut elm::Keyboard
 {
@@ -586,30 +547,8 @@ fn create_keyboard(
     keyboard
 }
 
-fn create_keyboard2(
-    rows : &Vec<Vec<KeyDef>>,
-    win : *const elm::Evas_Object)
-    -> *mut elm::Keyboard
-{
-    let (dpix, dpiy, w, h) = elm::get_dpi_size(win);
-    println!("dpix, dpiy {}, {}", dpix, dpiy);
-    let (mut px, mut py, kx, ky, ksx, ksy) = calc_keyboard_size2(dpix, dpiy, w, h, rows);
-    //px = cmp::min(px, w);
-    //py = cmp::min(py, h);
-
-    let (sizex, sizey) = get_size2(rows, w, h, dpix, dpiy);
-    px = sizex;
-    py = sizey;
-
-    println!("px, py {}, {}, key space {}, {}", px, py, ksx, ksy);
-    let keyboard = unsafe {elm::keyboard_new(win, px as i32, py as i32, kx as i32, ky as i32, ksx as i32, ksy as i32)};
-
-    keyboard
-}
-
-
 fn create_keys_bg(
-    rows : &Vec<Vec<&str>>,
+    rows : &Vec<Vec<KeyDef>>,
     container : &mut Container,
     )
 {
@@ -622,136 +561,7 @@ fn create_keys_bg(
     };
 }
 
-fn create_keys_bg2(
-    rows : &Vec<Vec<KeyDef>>,
-    container : &mut Container,
-    )
-{
-    create_keys2(rows, container);
-    unsafe {elm::keyboard_bg_add(
-            input_down,
-            input_up,
-            input_move,
-            mem::transmute(container))
-    };
-}
-
-
-fn create_keys(rows : &Vec<Vec<&str>>, container : &mut Container)
-{
-    let k = container.keyboard;
-    let mut row = 0;
-    for r in rows.iter() {
-
-        let mut col_keys = Vec::new();
-
-        for c in (*r).iter() {
-
-            let s : Vec<&str> = c.split(',').collect();
-
-            let w = if s.len() > 1 {
-                //s[1].parse::<usize>().unwrap()
-                s[1].parse::<f32>().unwrap()
-            }
-            else {
-                1f32
-            };
-
-            let realkey = if s.len() > 2 {
-                //s[1].parse::<usize>().unwrap()
-                s[2]
-            }
-            else {
-                s[0]
-            };
-
-            if c.starts_with("__reduce") {
-                /*
-                unsafe {
-                    elm::keyboard_fn_add(
-                        k,
-                        cstring_new(&c[2..]),
-                        close,
-                        ptr::null(),
-                        pos as i32,
-                        row,
-                        width as i32,
-                        1);
-                }
-                */
-                let r = unsafe {elm::keyboard_rect_add(
-                    k,
-                    cstring_new(&c[2..]),
-                    row,
-                    w)};
-
-                let key = Key {
-                    eo : r,
-                    name : String::from(s[0]),
-                    kind : KeyKind::Func(reduce),
-                    down : false,
-                    device : 0
-                };
-                col_keys.push(key);
-            }
-            else if c.starts_with("__close") {
-                let r = unsafe {elm::keyboard_rect_add(
-                    k,
-                    cstring_new(&c[2..]),
-                    row,
-                    w)};
-
-                let key = Key {
-                    eo : r,
-                    name : String::from(s[0]),
-                    kind : KeyKind::Func(close),
-                    down : false,
-                    device : 0
-                };
-                col_keys.push(key);
-            }
-            else {
-                unsafe {
-                    /*
-                    elm::keyboard_add(
-                        k,
-                        cstring_new(s[0]),
-                        pos as i32,
-                        row,
-                        (width*w) as i32,
-                        1);
-                        */
-                let keyname = if c.starts_with("comma") {
-                    ","
-                }
-                else {
-                    s[0]
-                };
-
-                    let r = elm::keyboard_rect_add(
-                        k,
-                        cstring_new(keyname),
-                        row,
-                        w);
-
-                    let key = Key {
-                        eo : r,
-                        name : String::from(s[0]),
-                        kind : KeyKind::Normal(String::from(realkey)),
-                        down : false,
-                        device : 0
-                    };
-                    col_keys.push(key);
-                }
-            }
-        }
-        row = row + 1;
-        //container.keys.push(col_keys);
-    }
-
-}
-
-fn create_keys2(rows : &Vec<Vec<KeyDef>>, container : &mut Container)
+fn create_keys(rows : &Vec<Vec<KeyDef>>, container : &mut Container)
 {
     let k = container.keyboard;
     let mut row = 0;
@@ -829,79 +639,41 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                 k.down = true;
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
-                /*
-                match k.kind {
-                    KeyKind::Normal(ref s) | KeyKind::Modifier(ref s) => {
-                        //con.handle_normal_key(s);
-                        if s == "Shift_L" && !con.shift {
-                            con.shift = true;
-                            unsafe {
-                                elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else if s == "Control_L" && !con.ctrl {
-                            con.ctrl = true;
-                            unsafe {
-                                elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else if s == "BackSpace" {
-                            unsafe {
-                             elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else {
-                            unsafe {
-                                elm::ecore_x_test_fake_key_press(cstring_new(s));
-                            }
-                            unsafe { elm::keyboard_popup_show(
-                                    con.keyboard,
-                                    k.eo,
-                                    cstring_new(s));
-                            }
-                        }
 
-                    },
-                    KeyKind::Func(ref cb) => {
-                        unsafe {
-                            cb(data);
-                        }
-                    }
-                }
-                */
                 match k.def.kind {
-                    KeyT::Ch(ref s) => {//| KeyKind::Modifier(ref s) => {
-                        //con.handle_normal_key(s);
-                        /*
-                        if s == "Shift_L" && !con.shift {
-                            con.shift = true;
-                            unsafe {
-                                elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
+                    KeyT::Ch(ref s) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_press(cstring_new(&*s.click));
+                            elm::keyboard_popup_show(
+                                con.keyboard,
+                                k.eo,
+                                cstring_new(&*k.def.name));
                         }
-                        else if s == "Control_L" && !con.ctrl {
-                            con.ctrl = true;
-                            unsafe {
-                                elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
+                    },
+                    KeyT::Special(ref f) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_down(cstring_new(f.get_fake()));
                         }
-                        else if s == "BackSpace" {
-                            unsafe {
-                             elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
+                    },
+                    KeyT::Modifier(ref m) => {
+                        let key = cstring_new(m.get_fake());
+                        match *m {
+                            Modifier::Shift => if !con.shift {
+                                con.shift = true;
+                                unsafe {
+                                    elm::ecore_x_test_fake_key_down(key);
+                                }
+                            },
+                            Modifier::Control => if !con.ctrl {
+                                con.ctrl = true;
+                                unsafe {
+                                    elm::ecore_x_test_fake_key_down(key);
+                                }
+                            },
+                            Modifier::Alt => {
+                                println!("Todo");
+                            },
                         }
-                        else {
-                        */
-                            unsafe {
-                                elm::ecore_x_test_fake_key_press(cstring_new(&*s.click));
-                            }
-                            unsafe { elm::keyboard_popup_show(
-                                    con.keyboard,
-                                    k.eo,
-                                    cstring_new(&*k.def.name));
-                            }
-                        //}
-
                     },
                     KeyT::Func(ref cb) => {
                         unsafe {
@@ -926,25 +698,33 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
     for c in con.keys.iter_mut() {
         for k in c.iter_mut() {
             if k.down && unsafe {elm::is_point_inside(k.eo, x, y)} {
-                /*
-                if k.name == "Shift_L" {
-                     con.shift = false;
-                    unsafe {
-                     elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
-                     }
-                }
-                else if k.name == "Control_L" {
-                     con.ctrl = false;
-                    unsafe {
-                     elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
-                     }
-                }
-                else if k.name == "BackSpace" {
-                    unsafe {
-                        elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+
+                match k.def.kind {
+                    KeyT::Special(ref s) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_up(cstring_new(s.get_fake()));
+                        }
+                    },
+                    KeyT::Modifier(ref m) => {
+                        match *m {
+                            Modifier::Shift => {
+                                con.shift = false;
+                            },
+                            Modifier::Control => {
+                                con.ctrl = false;
+                            },
+                            Modifier::Alt => {
+                                println!("todo");
+                            }
+                        }
+                        unsafe {
+                            elm::ecore_x_test_fake_key_up(cstring_new(m.get_fake()));
+                        }
+                    }
+                    _ => {
                     }
                 }
-                */
+
                 k.down = false;
                 //println!("found object {} ", k.name);
                 unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
@@ -968,20 +748,33 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     //println!("found object {} ", k.name);
                     unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
                     unsafe { elm::keyboard_popup_hide(con.keyboard);}
-                    /*
-                    if k.name == "Shift_L" {
-                         con.shift = false;
-                        unsafe {
-                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+
+                    match k.def.kind {
+                        KeyT::Special(ref s) => {
+                            unsafe {
+                                elm::ecore_x_test_fake_key_up(cstring_new(s.get_fake()));
+                            }
+                        },
+                        KeyT::Modifier(ref m) => {
+                            match *m {
+                                Modifier::Shift => {
+                                    con.shift = false;
+                                },
+                                Modifier::Control => {
+                                    con.ctrl = false;
+                                },
+                                Modifier::Alt => {
+                                    println!("todo");
+                                }
+                            }
+                            unsafe {
+                                elm::ecore_x_test_fake_key_up(cstring_new(m.get_fake()));
+                            }
+                        }
+                        _ => {
                         }
                     }
-                    else if k.name == "Control_L" {
-                         con.ctrl = false;
-                        unsafe {
-                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
-                        }
-                    }
-                    */
+
                 }
             }
             else if false && unsafe {elm::is_point_inside(k.eo, x, y)} {
@@ -989,32 +782,39 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
                 match k.def.kind {
-                    KeyT::Ch(ref s) => {//| KeyKind::Modifier(ref s) => {
-                        /*
-                        if s == "Shift_L" && !con.shift {
-                            con.shift = true;
-                            unsafe {
-                             elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else if s == "Control_L" && !con.ctrl {
-                            con.ctrl = true;
-                            unsafe {
-                             elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else {
-                        */
+                    KeyT::Ch(ref s) => {
                         unsafe {
                             elm::ecore_x_test_fake_key_press(cstring_new(&k.def.name));
-                        }
-                        unsafe { elm::keyboard_popup_show(
+                            elm::keyboard_popup_show(
                                 con.keyboard,
                                 k.eo,
                                 cstring_new(&k.def.name));
                         }
-                        //}
-
+                    },
+                    KeyT::Special(ref f) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_down(cstring_new(f.get_fake()));
+                        }
+                    },
+                    KeyT::Modifier(ref m) => {
+                        let key = cstring_new(m.get_fake());
+                        match *m {
+                            Modifier::Shift => if !con.shift {
+                                con.shift = true;
+                                unsafe {
+                                    elm::ecore_x_test_fake_key_down(key);
+                                }
+                            },
+                            Modifier::Control => if !con.ctrl {
+                                con.ctrl = true;
+                                unsafe {
+                                    elm::ecore_x_test_fake_key_down(key);
+                                }
+                            },
+                            Modifier::Alt => {
+                                println!("Todo");
+                            },
+                        }
                     },
                     KeyT::Func(ref cb) => {
                         unsafe {
