@@ -419,7 +419,7 @@ fn rows_test() -> Vec<Vec<KeyDef>>
         ch!("period", "greater",".",">"),
         ch!("slash", "question", "/","?"),
         ch!("backslash", "underscore","\\","_"),
-        sp!(Special::Up, "Up" )
+        sp!(Special::Up, "up" )
     ];
 
     let row3 = vec![
@@ -437,6 +437,101 @@ fn rows_test() -> Vec<Vec<KeyDef>>
     vec![row0, row1, row2, row3]
 }
 
+fn rows_test2() -> Vec<Vec<KeyDef>>
+{
+    let rownum = vec![ "Escape", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-,1,minus","^,1,asciicircum", r"\,1,yen" ,"BackSpace" ];
+    let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "Return,1.7" ];//, r"\" ];
+    let row1 = vec![ "Kanji,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return,1.4" ];
+    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash", "up,1,Up"];
+    //let row3 = vec![ "Control_L,2.2", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
+    //let row3 = vec![ "Control_L,2.2", "__empty,1.8", "space,7", "__empty,1", "__reduce", "__close", "left,1,Left", "down,1,Down", "right,1,Right"];
+    let row3 = vec![ "Control_L,2.2", "__empty,1.7", "space,6", "__close", "__empty,1", "left,1,Left", "down,1,Down", "right,1,Right"];
+
+    let rownum = vec![
+        sp!(Special::Esc, "esc"),
+        ch!("1", "exclam", "1", "!"),
+        ch!("2", "quotedbl", "2", "\""),
+        ch!("3", "numbersign", "3", "#"),
+        ch!("4", "dollar", "4", "$"),
+        ch!("5", "percent", "5", "%"),
+        ch!("6", "ampersand", "6", "&"),
+        ch!("7", "apostrophe", "7", "'"),
+        ch!("8", "parenleft", "8", "("),
+        ch!("9", "parenright", "9", ")"),
+        ch!("0"),
+        ch!("minus", "equal", "-", "="),
+        ch!("asciicircum", "asciitilde", "^", "~"),
+        ch!("yen", "bar", "¥", "|"),
+        sp!(Special::Backspace, "Backspace"),
+    ];
+
+
+
+    let row0 = vec![
+        sp!(Special::Tab, "Tab", 1.3f32),
+        ch!("q"),
+        ch!("w"),
+        ch!("e"),
+        ch!("r"),
+        ch!("t"),
+        ch!("y"),
+        ch!("u"),
+        ch!("i"),
+        ch!("o"),
+        ch!("p"),
+        ch!("at", "grave", "@", "`"),
+        ch!("bracketleft", "braceleft", "[","{"),
+        sp!(Special::Enter, "Enter", 1.7f32)
+    ];
+
+    let row1 = vec![
+        sp!(Special::Caps, "Caps", 1.6f32),
+        ch!("a"),
+        ch!("s"),
+        ch!("d"),
+        ch!("f"),
+        ch!("g"),
+        ch!("h"),
+        ch!("j"),
+        ch!("k"),
+        ch!("l"),
+        ch!("semicolon", "plus", ";","+"),
+        ch!("colon", "asterisk",":","*"),
+        ch!("bracketright", "braceright","]","}"),
+        sp!(Special::Enter, "Enter", 1.4f32)
+    ];
+
+    let row2 = vec![
+        modi!(Modifier::Shift, "Shift", 1.9f32),
+        ch!("z"),
+        ch!("x"),
+        ch!("c"),
+        ch!("v"),
+        ch!("b"),
+        ch!("n"),
+        ch!("m"),
+        ch!("comma","less",",","<"),
+        ch!("period", "greater",".",">"),
+        ch!("slash", "question", "/","?"),
+        ch!("backslash", "underscore","\\","_"),
+        sp!(Special::Up, "up" )
+    ];
+
+    let row3 = vec![
+        modi!(Modifier::Control, "Ctrl", 2.2f32),
+        empty!(1.7f32),
+        sp!(Special::Space, "", 6f32),
+        func!(close, "close"),
+        empty!(1.0f32),
+        sp!(Special::Left,"left"),
+        sp!(Special::Down, "down"),
+        sp!(Special::Right, "right"),
+    ];
+
+    vec![rownum, row0, row1, row2, row3]
+}
+
+
 
 fn main() {
     unsafe { elm::init() };
@@ -449,7 +544,7 @@ fn main() {
     //let rows = rows4();
     //let rows = rowsnum();
 
-    let rows = rows_test();
+    let rows = rows_test2();
 
     let keyboard = create_keyboard(&rows, win);
 
