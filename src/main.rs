@@ -646,10 +646,21 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                     KeyT::Ch(ref s) => {
                         unsafe {
                             elm::ecore_x_test_fake_key_press(cstring_new(&*s.click.0));
+                            let display = if con.shift {
+                                if let Some(ref ss) = s.shift {
+                                    ss.1.as_ref()
+                                }
+                                else {
+                                    s.click.1.as_ref()
+                                }
+                            }
+                            else {
+                                s.click.1.as_ref()
+                            };
                             elm::keyboard_popup_show(
                                 con.keyboard,
                                 k.eo,
-                                cstring_new(&*s.click.1));
+                                cstring_new(display));
                         }
                     },
                     KeyT::Special(ref f) => {
