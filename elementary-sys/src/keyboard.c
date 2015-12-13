@@ -442,7 +442,7 @@ smart_keyboard_key_add(
   evas_object_show(rect);
   evas_object_smart_member_add(rect, keyboard);
 
-  Eo* t = text_new(e, 200, 200, 200, 10);
+  Eo* t = text_new(e, 200, 200, 200, 12);
   evas_object_pass_events_set(t, EINA_TRUE);
   evas_object_text_text_set(t, keyname);
   // evas_object_textblock_text_markup_set(t, keyname);

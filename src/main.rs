@@ -124,6 +124,9 @@ impl KeyDef{
                     None => (c.click.1.as_ref(), None)
                  }
             },
+            KeyT::Empty => {
+                ("__empty", None)
+            },
             _ => (self.name.as_ref(), None)
 
         }
@@ -448,7 +451,7 @@ fn rows_test2() -> Vec<Vec<KeyDef>>
     let row3 = vec![ "Control_L,2.2", "__empty,1.7", "space,6", "__close", "__empty,1", "left,1,Left", "down,1,Down", "right,1,Right"];
 
     let rownum = vec![
-        sp!(Special::Esc, "esc"),
+        sp!(Special::Esc, "Esc"),
         ch!("1", "exclam", "1", "!"),
         ch!("2", "quotedbl", "2", "\""),
         ch!("3", "numbersign", "3", "#"),
@@ -942,11 +945,13 @@ extern fn input_update(data : *mut c_void) -> bool
     true
 }
 
+/*
 fn get_button_count(v : &Vec<&str>) -> usize
 {
     let l = v.iter().filter(|s| !s.starts_with("__empty")).count();
     l
 }
+*/
 
 fn get_real_len(v : &Vec<&str>) -> f32
 {
