@@ -22,6 +22,14 @@ enum Special
     Backspace,
     Enter,
     Space,
+
+    Up,
+    Down,
+    Left,
+    Right,
+
+    PageUp,
+    PageDown
 }
 
 impl Special
@@ -31,26 +39,18 @@ impl Special
         match *self {
             Special::Esc => "Escape",
             Special::Tab => "Tab",
+            Special::Caps => "Caps_Lock",
             Special::Backspace => "BackSpace",
             Special::Enter => "Return",
             Special::Space => "space",
-            //Special::Shift => "Shift_L",
-            //Special::Control => "Control_L",
-            _ => ""
+            Special::Up => "Up",
+            Special::Down => "Down",
+            Special::Left => "Left",
+            Special::Right => "Right",
+            Special::PageUp => "Page_Up",
+            Special::PageDown => "Page_Down",
         }
     }
-}
-
-#[derive(Clone)]
-enum Move
-{
-    Up,
-    Down,
-    Left,
-    Right,
-
-    PageUp,
-    PageDown
 }
 
 #[derive(Clone)]
@@ -68,18 +68,9 @@ impl Modifier
         match *self {
             Modifier::Shift => "Shift_L",
             Modifier::Control => "Control_L",
-            _ => ""
+            Modifier::Alt => "Alt_L",
         }
     }
-}
-
-
-pub enum KeyKind
-{
-    Normal(String),
-    Modifier(String),
-    Func(elm::RustCb),
-    //Modifier(String)
 }
 
 #[derive(Clone)]
@@ -90,7 +81,6 @@ enum KeyT
     Func(elm::RustCb),
     Special(Special),
     //Modifier(String)
-    Move(Move),
     Ch(Ch),
     Empty
 }
@@ -101,7 +91,7 @@ struct KeyDef
     kind : KeyT,
     width : f32,
     height : f32,
-    name : String
+    name : String,
 }
 
 impl KeyDef{
@@ -111,7 +101,7 @@ impl KeyDef{
             kind : kind,
             width : 1f32,
             height : 1f32,
-            name : String::from(name)
+            name : String::from(name),
         }
     }
 
@@ -124,13 +114,27 @@ impl KeyDef{
             name : String::from(name)
         }
     }
+
+    fn get_name(&self) -> (&str, Option<&str>)
+    {
+        match self.kind {
+            KeyT::Ch(ref c) => {
+                match c.shift {
+                    Some(ref s) => (c.click.1.as_ref(), Some(s.1.as_ref())),
+                    None => (c.click.1.as_ref(), None)
+                 }
+            },
+            _ => (self.name.as_ref(), None)
+
+        }
+    }
 }
 
 #[derive(Clone)]
 struct Ch
 {
-    click : String,
-    shift : Option<String>,
+    click : (String,String),
+    shift : Option<(String,String)>,
     long : Vec<String>,
 }
 
@@ -139,17 +143,17 @@ impl Ch
     fn new(c : &str) -> Ch
     {
         Ch {
-            click : String::from(c),
+            click : (String::from(c), String::from(c)),
             shift : None,
             long : Vec::new()
         }
     }
 
-    fn with_shift(c : &str, shift : &str) -> Ch
+    fn with_shift(c : &str, shift : &str, disp1 : &str, disp2 : &str) -> Ch
     {
         Ch {
-            click : String::from(c),
-            shift : Some(String::from(shift)),
+            click : (String::from(c),String::from(disp1)),
+            shift : Some((String::from(shift),String::from(disp2))),
             long : Vec::new()
         }
     }
@@ -161,9 +165,9 @@ impl Ch
         ) -> Ch
     {
         Ch {
-            click : String::from(c),
+            click : (String::from(c),String::from(c)),
             shift : match shift {
-                    Some(s) => Some(String::from(s)),
+                    Some(s) => Some((String::from(s), String::from(c))),
                     None => None
             },
             long : long
@@ -171,26 +175,15 @@ impl Ch
     }
 }
 
-
 pub struct Key
 {
     eo : *mut elm::Evas_Object,
-    name : String,
-    kind : KeyKind,
-    down : bool,
-    device : i32
-}
-
-pub struct Key2
-{
-    eo : *mut elm::Evas_Object,
-    //name : String,
     def : KeyDef,
     down : bool,
     device : i32
 }
 
-impl Key2
+impl Key
 {
     fn key_up(&mut self, con : &mut Container)
     {
@@ -237,7 +230,7 @@ pub struct Touch
 
 pub struct Container
 {
-    keys : Vec<Vec<Key2>>,
+    keys : Vec<Vec<Key>>,
     touch : [Touch;10],
     shift : bool,
     ctrl : bool,
@@ -352,18 +345,14 @@ fn rowsnum<'a>() -> Vec<Vec<&'a str>>
 
 macro_rules! ch {
     ($l:expr) => (KeyDef::new(KeyT::Ch(Ch::new($l)),$l));
-    ($l:expr, $shift:expr) => (KeyDef::new(KeyT::Ch(Ch::with_shift($l,$shift)),$l))
+    ($l:expr, $shift:expr, $disp1:expr, $disp2:expr) => 
+        (KeyDef::new(KeyT::Ch(Ch::with_shift($l,$shift,$disp1, $disp2)),$disp1))
 }
 
 macro_rules! sp {
     ($l:expr,$name:expr) => (KeyDef::new(KeyT::Special($l),$name));
     ($l:expr,$name:expr, $w:expr) => (KeyDef::with_size(KeyT::Special($l),$name,$w,1f32));
     ($l:expr,$name:expr, $w:expr, $h:expr) => (KeyDef::with_size(KeyT::Special($l),$name,$w,$h));
-}
-
-macro_rules! mov {
-    ($l:expr,$name:expr) => (KeyDef::new(KeyT::Move($l),$name));
-    ($l:expr,$name:expr, $w:expr) => (KeyDef::with_size(KeyT::Move($l),$name,$w,1f32));
 }
 
 macro_rules! modi {
@@ -395,8 +384,8 @@ fn rows_test() -> Vec<Vec<KeyDef>>
         ch!("i"),
         ch!("o"),
         ch!("p"),
-        ch!("@", "`"),
-        ch!("[", "{"),
+        ch!("at", "grave", "@", "`"),
+        ch!("bracketleft", "braceleft", "[","{"),
         sp!(Special::Backspace, "Backspace", 1.3f32),
     ];
 
@@ -411,9 +400,9 @@ fn rows_test() -> Vec<Vec<KeyDef>>
         ch!("j"),
         ch!("k"),
         ch!("l"),
-        ch!(";", "+"),
-        ch!(":", "*"),
-        ch!("]", "]"),
+        ch!("semicolon", "plus", ";","+"),
+        ch!("colon", "asterisk",":","*"),
+        ch!("bracketright", "braceright","]","}"),
         sp!(Special::Enter, "Enter")
     ];
 
@@ -426,11 +415,11 @@ fn rows_test() -> Vec<Vec<KeyDef>>
         ch!("b"),
         ch!("n"),
         ch!("m"),
-        ch!(",", "<"),
-        ch!(".", ">"),
-        ch!("/", "?"),
-        ch!("\\", "_"),
-        mov!(Move::Up, "up")
+        ch!("comma","less",",","<"),
+        ch!("period", "greater",".",">"),
+        ch!("slash", "question", "/","?"),
+        ch!("backslash", "underscore","\\","_"),
+        sp!(Special::Up, "Up" )
     ];
 
     let row3 = vec![
@@ -572,13 +561,27 @@ fn create_keys(rows : &Vec<Vec<KeyDef>>, container : &mut Container)
         for c in (*r).iter() {
             let w = c.width;
 
+            //TODO display text better than "text1,text2"
+            let mut name = String::new();
+            match c.get_name() {
+                (s1, Some(s2)) => {
+                    name.push_str(s1);
+                    name.push_str(",");
+                    name.push_str(s2);
+                },
+                (s1, None) => {
+                    name.push_str(s1);
+                }
+            }
+
             let r = unsafe {elm::keyboard_rect_add(
                     k,
-                    cstring_new(&*c.name),
+                    cstring_new(name.as_ref()),
                     row,
                     w)};
 
-            let key = Key2 {
+
+            let key = Key {
                 eo : r,
                 def : (*c).clone(),
                 down : false,
@@ -591,7 +594,6 @@ fn create_keys(rows : &Vec<Vec<KeyDef>>, container : &mut Container)
     }
 
 }
-
 
 fn create_keyboard_with_table_buttons(rows : &Vec<Vec<&str>>)
 {
@@ -643,11 +645,11 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                 match k.def.kind {
                     KeyT::Ch(ref s) => {
                         unsafe {
-                            elm::ecore_x_test_fake_key_press(cstring_new(&*s.click));
+                            elm::ecore_x_test_fake_key_press(cstring_new(&*s.click.0));
                             elm::keyboard_popup_show(
                                 con.keyboard,
                                 k.eo,
-                                cstring_new(&*k.def.name));
+                                cstring_new(&*s.click.1));
                         }
                     },
                     KeyT::Special(ref f) => {
