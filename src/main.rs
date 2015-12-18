@@ -13,17 +13,16 @@ const KEY_Y_MM : f32 = 17f32;
 const KEYSPACE_X_MM : f32 = 0.8f32;
 const KEYSPACE_Y_MM : f32 = 0.8f32;
 
-pub KeySpecial
+#[derive(Clone)]
+enum Special
 {
     Esc,
     Tab,
     Caps,
     Backspace,
     Enter,
-}
+    Space,
 
-pub KeyMove
-{
     Up,
     Down,
     Left,
@@ -33,29 +32,196 @@ pub KeyMove
     PageDown
 }
 
-pub KeyModifier
+impl Special
+{
+    fn get_fake(&self) -> &str
+    {
+        match *self {
+            Special::Esc => "Escape",
+            Special::Tab => "Tab",
+            Special::Caps => "Caps_Lock",
+            Special::Backspace => "BackSpace",
+            Special::Enter => "Return",
+            Special::Space => "space",
+            Special::Up => "Up",
+            Special::Down => "Down",
+            Special::Left => "Left",
+            Special::Right => "Right",
+            Special::PageUp => "Page_Up",
+            Special::PageDown => "Page_Down",
+        }
+    }
+}
+
+#[derive(Clone)]
+enum Modifier
 {
     Shift,
     Control,
     Alt,
 }
 
-pub enum KeyKind
+impl Modifier
 {
-    Normal(String),
-    Modifier(String),
+    fn get_fake(&self) -> &str
+    {
+        match *self {
+            Modifier::Shift => "Shift_L",
+            Modifier::Control => "Control_L",
+            Modifier::Alt => "Alt_L",
+        }
+    }
+}
+
+#[derive(Clone)]
+enum KeyT
+{
+    //Normal(String),
+    Modifier(Modifier),
     Func(elm::RustCb),
+    Special(Special),
     //Modifier(String)
+    Ch(Ch),
+    Empty
+}
+
+#[derive(Clone)]
+struct KeyDef
+{
+    kind : KeyT,
+    width : f32,
+    height : f32,
+    name : String,
+}
+
+impl KeyDef{
+    fn new(kind : KeyT, name : &str ) -> KeyDef
+    {
+        KeyDef {
+            kind : kind,
+            width : 1f32,
+            height : 1f32,
+            name : String::from(name),
+        }
+    }
+
+    fn with_size(kind : KeyT , name : &str, w : f32, h : f32)  -> KeyDef
+    {
+        KeyDef {
+            kind : kind,
+            width : w,
+            height : h,
+            name : String::from(name)
+        }
+    }
+
+    fn get_name(&self) -> (&str, Option<&str>)
+    {
+        match self.kind {
+            KeyT::Ch(ref c) => {
+                match c.shift {
+                    Some(ref s) => (c.click.1.as_ref(), Some(s.1.as_ref())),
+                    None => (c.click.1.as_ref(), None)
+                 }
+            },
+            KeyT::Empty => {
+                ("__empty", None)
+            },
+            _ => (self.name.as_ref(), None)
+
+        }
+    }
+}
+
+#[derive(Clone)]
+struct Ch
+{
+    click : (String,String),
+    shift : Option<(String,String)>,
+    long : Vec<String>,
+}
+
+impl Ch
+{
+    fn new(c : &str) -> Ch
+    {
+        Ch {
+            click : (String::from(c), String::from(c)),
+            shift : None,
+            long : Vec::new()
+        }
+    }
+
+    fn with_shift(c : &str, shift : &str, disp1 : &str, disp2 : &str) -> Ch
+    {
+        Ch {
+            click : (String::from(c),String::from(disp1)),
+            shift : Some((String::from(shift),String::from(disp2))),
+            long : Vec::new()
+        }
+    }
+
+    fn with_shift_long(
+        c : &str,
+        shift : Option<&str>,
+        long : Vec<String>,
+        ) -> Ch
+    {
+        Ch {
+            click : (String::from(c),String::from(c)),
+            shift : match shift {
+                    Some(s) => Some((String::from(s), String::from(c))),
+                    None => None
+            },
+            long : long
+        }
+    }
 }
 
 pub struct Key
 {
     eo : *mut elm::Evas_Object,
-    name : String,
-    kind : KeyKind,
+    def : KeyDef,
     down : bool,
     device : i32
 }
+
+impl Key
+{
+    fn key_up(&mut self, con : &mut Container)
+    {
+        match self.def.kind {
+            KeyT::Special(ref s) => {
+                unsafe {
+                    elm::ecore_x_test_fake_key_up(cstring_new(s.get_fake()));
+                }
+            },
+            KeyT::Modifier(ref m) => {
+                match *m {
+                    Modifier::Shift => {
+                        con.shift = false;
+                    },
+                    Modifier::Control => {
+                        con.ctrl = false;
+                    },
+                    Modifier::Alt => {
+                        println!("todo");
+                    }
+                }
+                unsafe {
+                    elm::ecore_x_test_fake_key_up(cstring_new(m.get_fake()));
+                }
+            }
+            _ => {
+            }
+        }
+
+        self.down = false;
+        //println!("found object {} ", self.name);
+        unsafe { elm::evas_object_color_set(self.eo, 80, 80, 80, 255)};
+    }
+}
+
 
 #[derive(Copy, Clone)]
 pub struct Touch
@@ -94,18 +260,18 @@ pub struct Config
 }
 
 fn get_size(
-        rows :&Vec<Vec<&str>>,
-        //config : &Config,
-        screenw : usize,
-        screenh : usize,
-        dpix : usize,
-        dpiy : usize
-        ) -> (usize, usize)
-    {
+    rows :&Vec<Vec<KeyDef>>,
+    //config : &Config,
+    screenw : usize,
+    screenh : usize,
+    dpix : usize,
+    dpiy : usize
+    ) -> (usize, usize)
+{
     let mut max_col = 0f32;
     for r in  rows.iter() {
         //max_col = cmp::max(max_col, get_real_len(r));
-        max_col = max_col.max(get_real_len(r));
+        max_col = max_col.max(get_real_len2(r));
     }
 
     let rows_num = rows.len() as f32;
@@ -136,7 +302,8 @@ fn get_size(
     (
         width_px, height_px
     )
-    }
+}
+
 
 /*
 impl Container
@@ -179,6 +346,196 @@ fn rowsnum<'a>() -> Vec<Vec<&'a str>>
     vec![rownum, row0, row1, row2, row3]
 }
 
+macro_rules! ch {
+    ($l:expr) => (KeyDef::new(KeyT::Ch(Ch::new($l)),$l));
+    ($l:expr, $shift:expr, $disp1:expr, $disp2:expr) => 
+        (KeyDef::new(KeyT::Ch(Ch::with_shift($l,$shift,$disp1, $disp2)),$disp1))
+}
+
+macro_rules! sp {
+    ($l:expr,$name:expr) => (KeyDef::new(KeyT::Special($l),$name));
+    ($l:expr,$name:expr, $w:expr) => (KeyDef::with_size(KeyT::Special($l),$name,$w,1f32));
+    ($l:expr,$name:expr, $w:expr, $h:expr) => (KeyDef::with_size(KeyT::Special($l),$name,$w,$h));
+}
+
+macro_rules! modi {
+    ($l:expr,$name:expr) => (KeyDef::new(KeyT::Modifier($l),$name));
+    ($l:expr,$name:expr, $w:expr) => (KeyDef::with_size(KeyT::Modifier($l),$name,$w,1f32));
+}
+
+macro_rules! empty {
+    ($w:expr) => (KeyDef::with_size(KeyT::Empty,"",$w,1f32));
+}
+
+macro_rules! func {
+    ($f:expr,$name:expr) => (KeyDef::new(KeyT::Func($f),$name));
+}
+
+
+
+fn rows_test() -> Vec<Vec<KeyDef>>
+{
+    let row0 = vec![
+        sp!(Special::Esc, "Esc"),
+        ch!("q"),
+        ch!("w"),
+        ch!("e"),
+        ch!("r"),
+        ch!("t"),
+        ch!("y"),
+        ch!("u"),
+        ch!("i"),
+        ch!("o"),
+        ch!("p"),
+        ch!("at", "grave", "@", "`"),
+        ch!("bracketleft", "braceleft", "[","{"),
+        sp!(Special::Backspace, "Backspace", 1.3f32),
+    ];
+
+    let row1 = vec![
+        sp!(Special::Tab, "Tab", 1.3f32),
+        ch!("a"),
+        ch!("s"),
+        ch!("d"),
+        ch!("f"),
+        ch!("g"),
+        ch!("h"),
+        ch!("j"),
+        ch!("k"),
+        ch!("l"),
+        ch!("semicolon", "plus", ";","+"),
+        ch!("colon", "asterisk",":","*"),
+        ch!("bracketright", "braceright","]","}"),
+        sp!(Special::Enter, "Enter")
+    ];
+
+    let row2 = vec![
+        modi!(Modifier::Shift, "Shift", 1.6f32),
+        ch!("z"),
+        ch!("x"),
+        ch!("c"),
+        ch!("v"),
+        ch!("b"),
+        ch!("n"),
+        ch!("m"),
+        ch!("comma","less",",","<"),
+        ch!("period", "greater",".",">"),
+        ch!("slash", "question", "/","?"),
+        ch!("backslash", "underscore","\\","_"),
+        sp!(Special::Up, "up" )
+    ];
+
+    let row3 = vec![
+        modi!(Modifier::Control, "Ctrl", 1.6f32),
+        empty!(2f32),
+        sp!(Special::Space, "", 7f32),
+        empty!(1.4f32),
+        func!(reduce, "reduce"),
+        func!(close, "close"),
+        //mov!(Move::Left,"left"),
+        //mov!(Move::Down, "down"),
+        //mov!(Move::Right, "right"),
+    ];
+
+    vec![row0, row1, row2, row3]
+}
+
+fn rows_test2() -> Vec<Vec<KeyDef>>
+{
+    let rownum = vec![ "Escape", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-,1,minus","^,1,asciicircum", r"\,1,yen" ,"BackSpace" ];
+    let row0 = vec![ "Tab,1.3","q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@,1,at","[,1,bracketleft", "Return,1.7" ];//, r"\" ];
+    let row1 = vec![ "Kanji,1.6", "a", "s", "d", "f", "g", "h", "j", "k", "l", ";,1,semicolon", ":,1,colon","],1,bracketright", "Return,1.4" ];
+    let row2 = vec![ "Shift_L,1.9","z", "x", "c", "v", "b", "n", "m", "comma,1,comma", ".,1,period", r"/,1,slash", r"\,1,backslash", "up,1,Up"];
+    //let row3 = vec![ "Control_L,2.2", "__empty,2", "space,7", "__empty,1.4", "__reduce", "__close"];
+    //let row3 = vec![ "Control_L,2.2", "__empty,1.8", "space,7", "__empty,1", "__reduce", "__close", "left,1,Left", "down,1,Down", "right,1,Right"];
+    let row3 = vec![ "Control_L,2.2", "__empty,1.7", "space,6", "__close", "__empty,1", "left,1,Left", "down,1,Down", "right,1,Right"];
+
+    let rownum = vec![
+        sp!(Special::Esc, "Esc"),
+        ch!("1", "exclam", "1", "!"),
+        ch!("2", "quotedbl", "2", "\""),
+        ch!("3", "numbersign", "3", "#"),
+        ch!("4", "dollar", "4", "$"),
+        ch!("5", "percent", "5", "%"),
+        ch!("6", "ampersand", "6", "&"),
+        ch!("7", "apostrophe", "7", "'"),
+        ch!("8", "parenleft", "8", "("),
+        ch!("9", "parenright", "9", ")"),
+        ch!("0"),
+        ch!("minus", "equal", "-", "="),
+        ch!("asciicircum", "asciitilde", "^", "~"),
+        ch!("yen", "bar", "¥", "|"),
+        sp!(Special::Backspace, "Backspace"),
+    ];
+
+
+
+    let row0 = vec![
+        sp!(Special::Tab, "Tab", 1.3f32),
+        ch!("q"),
+        ch!("w"),
+        ch!("e"),
+        ch!("r"),
+        ch!("t"),
+        ch!("y"),
+        ch!("u"),
+        ch!("i"),
+        ch!("o"),
+        ch!("p"),
+        ch!("at", "grave", "@", "`"),
+        ch!("bracketleft", "braceleft", "[","{"),
+        sp!(Special::Enter, "Enter", 1.7f32)
+    ];
+
+    let row1 = vec![
+        sp!(Special::Caps, "Caps", 1.6f32),
+        ch!("a"),
+        ch!("s"),
+        ch!("d"),
+        ch!("f"),
+        ch!("g"),
+        ch!("h"),
+        ch!("j"),
+        ch!("k"),
+        ch!("l"),
+        ch!("semicolon", "plus", ";","+"),
+        ch!("colon", "asterisk",":","*"),
+        ch!("bracketright", "braceright","]","}"),
+        sp!(Special::Enter, "Enter", 1.4f32)
+    ];
+
+    let row2 = vec![
+        modi!(Modifier::Shift, "Shift", 1.9f32),
+        ch!("z"),
+        ch!("x"),
+        ch!("c"),
+        ch!("v"),
+        ch!("b"),
+        ch!("n"),
+        ch!("m"),
+        ch!("comma","less",",","<"),
+        ch!("period", "greater",".",">"),
+        ch!("slash", "question", "/","?"),
+        ch!("backslash", "underscore","\\","_"),
+        sp!(Special::Up, "up" )
+    ];
+
+    let row3 = vec![
+        modi!(Modifier::Control, "Ctrl", 2.2f32),
+        empty!(1.7f32),
+        sp!(Special::Space, "", 6f32),
+        func!(close, "close"),
+        empty!(1.0f32),
+        sp!(Special::Left,"left"),
+        sp!(Special::Down, "down"),
+        sp!(Special::Right, "right"),
+    ];
+
+    vec![rownum, row0, row1, row2, row3]
+}
+
+
+
 fn main() {
     unsafe { elm::init() };
 
@@ -188,7 +545,9 @@ fn main() {
     let config = calc_config(dpix, dpiy);
 
     //let rows = rows4();
-    let rows = rowsnum();
+    //let rows = rowsnum();
+
+    let rows = rows_test2();
 
     let keyboard = create_keyboard(&rows, win);
 
@@ -226,14 +585,13 @@ fn calc_config(dpix : usize, dpiy : usize) //, rows :&Vec<Vec<&str>>)
     }
 }
 
-
-fn calc_keyboard_size(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&Vec<Vec<&str>>)
+fn calc_keyboard_size(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&Vec<Vec<KeyDef>>)
     -> (usize, usize, usize, usize, usize, usize)
 {
     let mut max_col = 0f32;
     for r in rows.iter() {
         //max_col = cmp::max(max_col, get_real_len(r));
-        max_col = max_col.max(get_real_len(r));
+        max_col = max_col.max(get_real_len2(r));
     }
 
     let rows_num = rows.len() as f32;
@@ -256,7 +614,7 @@ fn calc_keyboard_size(dpix : usize, dpiy : usize, w : usize, h : usize, rows :&V
 }
 
 fn create_keyboard(
-    rows : &Vec<Vec<&str>>,
+    rows : &Vec<Vec<KeyDef>>,
     win : *const elm::Evas_Object)
     -> *mut elm::Keyboard
 {
@@ -277,7 +635,7 @@ fn create_keyboard(
 }
 
 fn create_keys_bg(
-    rows : &Vec<Vec<&str>>,
+    rows : &Vec<Vec<KeyDef>>,
     container : &mut Container,
     )
 {
@@ -290,7 +648,7 @@ fn create_keys_bg(
     };
 }
 
-fn create_keys(rows : &Vec<Vec<&str>>, container : &mut Container)
+fn create_keys(rows : &Vec<Vec<KeyDef>>, container : &mut Container)
 {
     let k = container.keyboard;
     let mut row = 0;
@@ -299,104 +657,35 @@ fn create_keys(rows : &Vec<Vec<&str>>, container : &mut Container)
         let mut col_keys = Vec::new();
 
         for c in (*r).iter() {
+            let w = c.width;
 
-            let s : Vec<&str> = c.split(',').collect();
-
-            let w = if s.len() > 1 {
-                //s[1].parse::<usize>().unwrap()
-                s[1].parse::<f32>().unwrap()
-            }
-            else {
-                1f32
-            };
-
-            let realkey = if s.len() > 2 {
-                //s[1].parse::<usize>().unwrap()
-                s[2]
-            }
-            else {
-                s[0]
-            };
-
-            if c.starts_with("__reduce") {
-                /*
-                unsafe {
-                    elm::keyboard_fn_add(
-                        k,
-                        cstring_new(&c[2..]),
-                        close,
-                        ptr::null(),
-                        pos as i32,
-                        row,
-                        width as i32,
-                        1);
+            //TODO display text better than "text1,text2"
+            let mut name = String::new();
+            match c.get_name() {
+                (s1, Some(s2)) => {
+                    name.push_str(s1);
+                    name.push_str(",");
+                    name.push_str(s2);
+                },
+                (s1, None) => {
+                    name.push_str(s1);
                 }
-                */
-                let r = unsafe {elm::keyboard_rect_add(
+            }
+
+            let r = unsafe {elm::keyboard_rect_add(
                     k,
-                    cstring_new(&c[2..]),
+                    cstring_new(name.as_ref()),
                     row,
                     w)};
 
-                let key = Key {
-                    eo : r,
-                    name : String::from(s[0]),
-                    kind : KeyKind::Func(reduce),
-                    down : false,
-                    device : 0
-                };
-                col_keys.push(key);
-            }
-            else if c.starts_with("__close") {
-                let r = unsafe {elm::keyboard_rect_add(
-                    k,
-                    cstring_new(&c[2..]),
-                    row,
-                    w)};
 
-                let key = Key {
-                    eo : r,
-                    name : String::from(s[0]),
-                    kind : KeyKind::Func(close),
-                    down : false,
-                    device : 0
-                };
-                col_keys.push(key);
-            }
-            else {
-                unsafe {
-                    /*
-                    elm::keyboard_add(
-                        k,
-                        cstring_new(s[0]),
-                        pos as i32,
-                        row,
-                        (width*w) as i32,
-                        1);
-                        */
-                let keyname = if c.starts_with("comma") {
-                    ","
-                }
-                else {
-                    s[0]
-                };
-
-                    let r = elm::keyboard_rect_add(
-                        k,
-                        cstring_new(keyname),
-                        row,
-                        w);
-
-                    let key = Key {
-                        eo : r,
-                        name : String::from(s[0]),
-                        kind : KeyKind::Normal(String::from(realkey)),
-                        down : false,
-                        device : 0
-                    };
-                    col_keys.push(key);
-                }
-            }
+            let key = Key {
+                eo : r,
+                def : (*c).clone(),
+                down : false,
+                device : 0
+            };
+            col_keys.push(key);
         }
         row = row + 1;
         container.keys.push(col_keys);
@@ -450,43 +739,59 @@ extern fn input_down(data : *mut c_void, device : c_int, x : c_int, y : c_int) {
                 k.down = true;
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
-                match k.kind {
-                    KeyKind::Normal(ref s) | KeyKind::Modifier(ref s) => {
-                        //con.handle_normal_key(s);
-                        if s == "Shift_L" && !con.shift {
-                            con.shift = true;
-                            unsafe {
-                                elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else if s == "Control_L" && !con.ctrl {
-                            con.ctrl = true;
-                            unsafe {
-                                elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else if s == "BackSpace" {
-                            unsafe {
-                             elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else {
-                            unsafe {
-                                elm::ecore_x_test_fake_key_press(cstring_new(s));
-                            }
-                            unsafe { elm::keyboard_popup_show(
-                                    con.keyboard,
-                                    k.eo,
-                                    cstring_new(s));
-                            }
-                        }
 
+                match k.def.kind {
+                    KeyT::Ch(ref s) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_press(cstring_new(&*s.click.0));
+                            let display = if con.shift {
+                                if let Some(ref ss) = s.shift {
+                                    ss.1.as_ref()
+                                }
+                                else {
+                                    s.click.1.as_ref()
+                                }
+                            }
+                            else {
+                                s.click.1.as_ref()
+                            };
+                            elm::keyboard_popup_show(
+                                con.keyboard,
+                                k.eo,
+                                cstring_new(display));
+                        }
                     },
-                    KeyKind::Func(ref cb) => {
+                    KeyT::Special(ref f) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_down(cstring_new(f.get_fake()));
+                        }
+                    },
+                    KeyT::Modifier(ref m) => {
+                        let key = cstring_new(m.get_fake());
+                        match *m {
+                            Modifier::Shift => if !con.shift {
+                                con.shift = true;
+                                unsafe {
+                                    elm::ecore_x_test_fake_key_down(key);
+                                }
+                            },
+                            Modifier::Control => if !con.ctrl {
+                                con.ctrl = true;
+                                unsafe {
+                                    elm::ecore_x_test_fake_key_down(key);
+                                }
+                            },
+                            Modifier::Alt => {
+                                println!("Todo");
+                            },
+                        }
+                    },
+                    KeyT::Func(ref cb) => {
                         unsafe {
                             cb(data);
                         }
-                    }
+                    },
+                    _ => {}
                 }
                 break;
             }
@@ -504,23 +809,33 @@ extern fn input_up(data : *mut c_void, device : c_int, x : c_int, y : c_int)
     for c in con.keys.iter_mut() {
         for k in c.iter_mut() {
             if k.down && unsafe {elm::is_point_inside(k.eo, x, y)} {
-                if k.name == "Shift_L" {
-                     con.shift = false;
-                    unsafe {
-                     elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
-                     }
-                }
-                else if k.name == "Control_L" {
-                     con.ctrl = false;
-                    unsafe {
-                     elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
-                     }
-                }
-                else if k.name == "BackSpace" {
-                    unsafe {
-                        elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+
+                match k.def.kind {
+                    KeyT::Special(ref s) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_up(cstring_new(s.get_fake()));
+                        }
+                    },
+                    KeyT::Modifier(ref m) => {
+                        match *m {
+                            Modifier::Shift => {
+                                con.shift = false;
+                            },
+                            Modifier::Control => {
+                                con.ctrl = false;
+                            },
+                            Modifier::Alt => {
+                                println!("todo");
+                            }
+                        }
+                        unsafe {
+                            elm::ecore_x_test_fake_key_up(cstring_new(m.get_fake()));
+                        }
+                    }
+                    _ => {
                     }
                 }
+
                 k.down = false;
                 //println!("found object {} ", k.name);
                 unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
@@ -544,55 +859,80 @@ extern fn input_move(data : *mut c_void, device : c_int, x : c_int, y : c_int)
                     //println!("found object {} ", k.name);
                     unsafe { elm::evas_object_color_set(k.eo, 80, 80, 80, 255)};
                     unsafe { elm::keyboard_popup_hide(con.keyboard);}
-                    if k.name == "Shift_L" {
-                         con.shift = false;
-                        unsafe {
-                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
+
+                    match k.def.kind {
+                        KeyT::Special(ref s) => {
+                            unsafe {
+                                elm::ecore_x_test_fake_key_up(cstring_new(s.get_fake()));
+                            }
+                        },
+                        KeyT::Modifier(ref m) => {
+                            match *m {
+                                Modifier::Shift => {
+                                    con.shift = false;
+                                },
+                                Modifier::Control => {
+                                    con.ctrl = false;
+                                },
+                                Modifier::Alt => {
+                                    println!("todo");
+                                }
+                            }
+                            unsafe {
+                                elm::ecore_x_test_fake_key_up(cstring_new(m.get_fake()));
+                            }
+                        }
+                        _ => {
                         }
                     }
-                    else if k.name == "Control_L" {
-                         con.ctrl = false;
-                        unsafe {
-                         elm::ecore_x_test_fake_key_up(cstring_new(&k.name));
-                        }
-                    }
+
                 }
             }
             else if false && unsafe {elm::is_point_inside(k.eo, x, y)} {
                 k.down = true;
                 k.device = device;
                 unsafe { elm::evas_object_color_set(k.eo, 150, 150, 150, 255)};
-                match k.kind {
-                    KeyKind::Normal(ref s) | KeyKind::Modifier(ref s) => {
-                        if s == "Shift_L" && !con.shift {
-                            con.shift = true;
-                            unsafe {
-                             elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else if s == "Control_L" && !con.ctrl {
-                            con.ctrl = true;
-                            unsafe {
-                             elm::ecore_x_test_fake_key_down(cstring_new(s));
-                            }
-                        }
-                        else {
+                match k.def.kind {
+                    KeyT::Ch(ref s) => {
                         unsafe {
-                            elm::ecore_x_test_fake_key_press(cstring_new(s));
-                        }
-                        unsafe { elm::keyboard_popup_show(
+                            elm::ecore_x_test_fake_key_press(cstring_new(&k.def.name));
+                            elm::keyboard_popup_show(
                                 con.keyboard,
                                 k.eo,
-                                cstring_new(s));
+                                cstring_new(&k.def.name));
                         }
-                        }
-
                     },
-                    KeyKind::Func(ref cb) => {
+                    KeyT::Special(ref f) => {
+                        unsafe {
+                            elm::ecore_x_test_fake_key_down(cstring_new(f.get_fake()));
+                        }
+                    },
+                    KeyT::Modifier(ref m) => {
+                        let key = cstring_new(m.get_fake());
+                        match *m {
+                            Modifier::Shift => if !con.shift {
+                                con.shift = true;
+                                unsafe {
+                                    elm::ecore_x_test_fake_key_down(key);
+                                }
+                            },
+                            Modifier::Control => if !con.ctrl {
+                                con.ctrl = true;
+                                unsafe {
+                                    elm::ecore_x_test_fake_key_down(key);
+                                }
+                            },
+                            Modifier::Alt => {
+                                println!("Todo");
+                            },
+                        }
+                    },
+                    KeyT::Func(ref cb) => {
                         unsafe {
                             cb(data);
                         }
-                    }
+                    },
+                    _ => {}
                 }
             }
         }
@@ -605,11 +945,13 @@ extern fn input_update(data : *mut c_void) -> bool
     true
 }
 
+/*
 fn get_button_count(v : &Vec<&str>) -> usize
 {
     let l = v.iter().filter(|s| !s.starts_with("__empty")).count();
     l
 }
+*/
 
 fn get_real_len(v : &Vec<&str>) -> f32
 {
@@ -624,6 +966,16 @@ fn get_real_len(v : &Vec<&str>) -> f32
             1f32
         };
         l += w;
+    }
+
+    l
+}
+
+fn get_real_len2(v : &Vec<KeyDef>) -> f32
+{
+    let mut l = 0f32;
+    for c in v.iter() {
+        l += c.width;
     }
 
     l
