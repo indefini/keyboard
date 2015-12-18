@@ -1,5 +1,6 @@
 #include "keyboard.h"
 #include "Evas.h"
+#include "dbus.h"
 
 typedef struct _Key Key;
 struct _Key
@@ -117,6 +118,23 @@ EVAS_SMART_SUBCLASS_NEW("Smart_Keyboard", _smart_keyboard,
                         Evas_Smart_Class, Evas_Smart_Class,
                         evas_object_smart_clipped_class_get, _smart_callbacks);
 
+void keyboard_show(void* data)
+{
+  evas_object_show(data);
+}
+
+void reopen(void* o)
+{
+  //Eina_Bool b = elm_win_iconified_get(_win);
+  //printf("window icon : %d \n", b);
+
+  Smart_Keyboard * priv = evas_object_smart_data_get(o);
+
+  elm_win_iconified_set(priv->win, EINA_FALSE);
+
+  evas_object_show(priv->win);
+}
+
 
 static void
 _smart_keyboard_add(Evas_Object *o)
@@ -143,7 +161,7 @@ _smart_keyboard_add(Evas_Object *o)
 
    //Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_TOOLTIP);
    Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_DOCK);
-  elm_win_override_set(winpop, EINA_TRUE);
+   elm_win_override_set(winpop, EINA_TRUE);
    evas_object_name_set(winpop, strdup("keypop"));
    elm_win_raise(winpop);
   //elm_win_autodel_set(winpop, EINA_TRUE);
@@ -197,6 +215,9 @@ _smart_keyboard_add(Evas_Object *o)
    pp->object = winpop;//rect;
    pp->text = t;
    priv->popup = pp;
+
+   //init_dbus(keyboard_show, o);
+   init_dbus(reopen, o);
 }
 
 static void

@@ -1,7 +1,7 @@
 #include <Elementary.h>
 #include "keyboard.h"
 
-Evas_Object* _win;
+static Evas_Object* _win;
 //Evas_Object* _table;
 //Eina_List* _btns = NULL;
 
@@ -23,11 +23,16 @@ void kexit()
 
 void reduce()
 {
-  //Eina_Bool b = elm_win_iconified_get(_win);
-  //printf("window icon : %d \n", b);
+  Eina_Bool b = elm_win_iconified_get(_win);
+  printf("ELM reduce window icon : %d \n", b);
 
+  evas_object_hide(_win);
   elm_win_iconified_set(_win, EINA_TRUE);
+
+  b = elm_win_iconified_get(_win);
+  printf("ELM reduce after window icon : %d \n", b);
 }
+
 
 /*
 static void
@@ -214,7 +219,7 @@ _reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *eve
 Evas_Object* window_new()
 {
   //Evas_Object* win = elm_win_util_standard_add("keyboard", "keyboard");
-  Evas_Object* win = elm_win_add(NULL, "keyboard", ELM_WIN_DOCK);
+  Evas_Object* win = elm_win_add(NULL, "keyboard", ELM_WIN_BASIC);
   evas_object_name_set(win, strdup("win"));
   _win = win;
   elm_win_autodel_set(win, EINA_TRUE);
@@ -230,10 +235,10 @@ Evas_Object* window_new()
   //evas_object_event_callback_add(bg, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
-  elm_win_prop_focus_skip_set(win, EINA_TRUE);
+  //elm_win_prop_focus_skip_set(win, EINA_TRUE);
   //elm_win_override_set(win, EINA_TRUE);
-  elm_win_screen_constrain_set(win, EINA_TRUE);
-  elm_win_sticky_set(win, EINA_TRUE);
+  //elm_win_screen_constrain_set(win, EINA_TRUE);
+  //elm_win_sticky_set(win, EINA_TRUE);
   //elm_win_borderless_set(win, EINA_TRUE);
 
   Ecore_X_Window *xwin = elm_win_xwindow_get(win);
@@ -429,7 +434,6 @@ _rect_multi_move(void *data EINA_UNUSED, Evas *e EINA_UNUSED, Evas_Object *o EIN
    Evas_Event_Multi_Move *ev = event_info;
    _call_move_cb(o, ev->device, ev->cur.canvas.x, ev->cur.canvas.y);
 }
-
 
 void keyboard_bg_add(
       pressed_cb cb,

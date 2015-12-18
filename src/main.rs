@@ -524,8 +524,9 @@ fn rows_test2() -> Vec<Vec<KeyDef>>
         modi!(Modifier::Control, "Ctrl", 2.2f32),
         empty!(1.7f32),
         sp!(Special::Space, "", 6f32),
+        func!(reduce, "reduce"),
         func!(close, "close"),
-        empty!(1.0f32),
+        //empty!(1.0f32),
         sp!(Special::Left,"left"),
         sp!(Special::Down, "down"),
         sp!(Special::Right, "right"),
@@ -707,6 +708,7 @@ fn cstring_new(s : &str) -> *const c_char
 }
 
 extern fn reduce(data : *mut c_void) {
+    println!("reduce...........");
     let con : &mut Container = unsafe { mem::transmute(data) };
 
     for t in con.touch.iter_mut() {
