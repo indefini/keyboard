@@ -159,8 +159,8 @@ _smart_keyboard_add(Evas_Object *o)
 
    priv->rows = eina_array_new(6);
 
-   //Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_TOOLTIP);
-   Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_DOCK);
+   Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_TOOLTIP);
+   //Eo* winpop = elm_win_add(NULL, "keyboard_popup", ELM_WIN_DOCK);
    elm_win_override_set(winpop, EINA_TRUE);
    evas_object_name_set(winpop, strdup("keypop"));
    elm_win_raise(winpop);
@@ -177,10 +177,11 @@ _smart_keyboard_add(Evas_Object *o)
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
   elm_win_prop_focus_skip_set(winpop, EINA_TRUE);
-  //elm_win_override_set(win, EINA_TRUE);
+  elm_win_override_set(winpop, EINA_TRUE);
   elm_win_screen_constrain_set(winpop, EINA_TRUE);
   //elm_win_sticky_set(win, EINA_TRUE);
   elm_win_borderless_set(winpop, EINA_TRUE);
+
 
   //Ecore_X_Window *xwin = elm_win_xwindow_get(winpop);
   ////ecore_x_e_virtual_keyboard_set(
@@ -612,7 +613,7 @@ void smart_keyboard_show_popup(
   printf("yep txxxx : %d, %d, %d, %d \n",tx, ty, tw, th);
   //evas_object_move(text, w/2 - tw/2, h/2 - th/2);
   //TODO why do we need this offset... check testing at the end of the function
-  int offsety = 4; 
+  int offsety = 4;
   int offsetx = 1;
   evas_object_move(text, w/2 -tw/2 - offsetx, h/2 - th/2 - offsety);// -th/2);
   //evas_object_resize(text, w, size);

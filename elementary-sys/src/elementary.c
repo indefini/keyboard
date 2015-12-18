@@ -219,7 +219,8 @@ _reset_size_hints(void *data, Evas *e EINA_UNUSED, Evas_Object *stack, void *eve
 Evas_Object* window_new()
 {
   //Evas_Object* win = elm_win_util_standard_add("keyboard", "keyboard");
-  Evas_Object* win = elm_win_add(NULL, "keyboard", ELM_WIN_BASIC);
+  Evas_Object* win = elm_win_add(NULL, "keyboard", ELM_WIN_DIALOG_BASIC);
+  //Evas_Object* win = elm_win_add(NULL, "keyboard", ELM_WIN_BASIC);
   evas_object_name_set(win, strdup("win"));
   _win = win;
   elm_win_autodel_set(win, EINA_TRUE);
@@ -235,15 +236,15 @@ Evas_Object* window_new()
   //evas_object_event_callback_add(bg, EVAS_CALLBACK_MULTI_DOWN, _multi_down, NULL);
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
-  //elm_win_prop_focus_skip_set(win, EINA_TRUE);
+  elm_win_prop_focus_skip_set(win, EINA_TRUE);
   //elm_win_override_set(win, EINA_TRUE);
-  //elm_win_screen_constrain_set(win, EINA_TRUE);
-  //elm_win_sticky_set(win, EINA_TRUE);
-  //elm_win_borderless_set(win, EINA_TRUE);
+  elm_win_screen_constrain_set(win, EINA_TRUE);
+  elm_win_sticky_set(win, EINA_TRUE);
+  elm_win_borderless_set(win, EINA_TRUE);
 
   Ecore_X_Window *xwin = elm_win_xwindow_get(win);
   //ecore_x_e_virtual_keyboard_set(
-  //ecore_x_window_cursor_show(xwin, EINA_FALSE);
+  ecore_x_window_cursor_show(xwin, EINA_FALSE);
 
 
   evas_object_show(win);
