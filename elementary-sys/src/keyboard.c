@@ -2,6 +2,8 @@
 #include "Evas.h"
 #include "dbus.h"
 
+static s_pos_y = 0;
+
 typedef struct _Key Key;
 struct _Key
 {
@@ -132,6 +134,7 @@ void reopen(void* o)
 
   elm_win_iconified_set(priv->win, EINA_FALSE);
 
+  evas_object_move(priv->win, 0, s_pos_y);
   evas_object_show(priv->win);
 }
 
@@ -748,6 +751,7 @@ Keyboard* keyboard_new(Evas_Object* win, int px, int py, int kx, int ky, int ksx
   evas_object_resize(win, w, py);
   //elm_win_size_base_set(win, , winh);
   evas_object_move(win, 0, h - py);
+  s_pos_y = h -py;
   //test size
   //evas_object_resize(win, 206, 156);
 
