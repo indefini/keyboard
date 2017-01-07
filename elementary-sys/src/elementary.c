@@ -237,14 +237,14 @@ Evas_Object* window_new()
 
   //elm_win_keyboard_win_set(win, EINA_TRUE);
   elm_win_prop_focus_skip_set(win, EINA_TRUE);
-  elm_win_override_set(win, EINA_TRUE);
+  //elm_win_override_set(win, EINA_TRUE);
   elm_win_screen_constrain_set(win, EINA_TRUE);
-  elm_win_sticky_set(win, EINA_TRUE);
-  elm_win_borderless_set(win, EINA_TRUE);
+  //elm_win_sticky_set(win, EINA_TRUE);
+  //elm_win_borderless_set(win, EINA_TRUE);
 
   Ecore_X_Window *xwin = elm_win_xwindow_get(win);
+  //ecore_x_window_cursor_show(xwin, EINA_FALSE);
   //ecore_x_e_virtual_keyboard_set(
-  ecore_x_window_cursor_show(xwin, EINA_FALSE);
 
 
   evas_object_show(win);
